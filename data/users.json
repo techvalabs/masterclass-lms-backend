@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "name": "Test User",
+    "email": "test@example.com",
+    "password_hash": "$2a$12$tMLP9IR8QbfQBSjwmBZKzeeRZl857bxhVA80PoM9GQCa7JXO4FFi6",
+    "role": "student",
+    "avatar": null,
+    "email_verified": true,
+    "is_active": true,
+    "created_at": "2025-08-13T17:12:27.259Z",
+    "updated_at": "2025-08-13T17:12:27.259Z"
+  },
+  {
+    "id": 2,
+    "name": "Jesrel Agang",
+    "email": "jesrelagang94@gmail.com",
+    "password_hash": "$2a$12$KuptqxrWLDVfhdgSvCXve.2IW7L1mQAfC8j7c9mSW.OHXSBnd/b/e",
+    "role": "student",
+    "avatar": null,
+    "email_verified": true,
+    "is_active": true,
+    "created_at": "2025-08-13T17:13:23.129Z",
+    "updated_at": "2025-08-13T17:13:23.129Z"
+  },
+  {
+    "id": 3,
+    "name": "System Administrator",
+    "email": "admin@masterclass.com",
+    "password_hash": "$2a$12$dvHmT6CphFF4GhTL4IIvuuW7JfDro.zEQiXm18..IkyHCSPe1Eh/C",
+    "role": "admin",
+    "role_id": 3,
+    "is_active": true,
+    "email_verified": true,
+    "created_at": "2025-08-14T00:25:58.424Z"
+  }
+]

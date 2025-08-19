@@ -1,0 +1,28 @@
+[
+  {
+    "id": 1,
+    "email": "admin@example.com",
+    "name": "Admin User",
+    "password_hash": "$2a$12$WihmkwTK9ae6ijq3wQJvjOZduaM5VA5VUfDXAYUNUQpbFwpxwdoF2",
+    "role": "admin",
+    "role_id": 3,
+    "is_active": true,
+    "email_verified_at": "2024-01-01T00:00:00.000Z",
+    "created_at": "2024-01-01T00:00:00.000Z",
+    "updated_at": "2024-01-01T00:00:00.000Z",
+    "last_login_at": "2025-08-14T06:53:28.572Z"
+  },
+  {
+    "id": 2,
+    "email": "test@example.com",
+    "name": "Test User",
+    "password_hash": "$2a$12$BzoJjLK02lM5ZGdCVJpb0utp6WpT87swdd94SPElsSnUMq344c0yS",
+    "role": "student",
+    "role_id": 1,
+    "is_active": true,
+    "email_verified_at": "2024-01-01T00:00:00.000Z",
+    "created_at": "2024-01-01T00:00:00.000Z",
+    "updated_at": "2024-01-01T00:00:00.000Z",
+    "last_login_at": "2025-08-14T06:53:44.784Z"
+  }
+]

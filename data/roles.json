@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1,
+    "name": "student",
+    "description": "Student",
+    "permissions": [
+      "read:courses",
+      "read:lessons"
+    ]
+  },
+  {
+    "id": 2,
+    "name": "instructor",
+    "description": "Instructor",
+    "permissions": [
+      "read:courses",
+      "write:courses",
+      "read:lessons",
+      "write:lessons"
+    ]
+  },
+  {
+    "id": 3,
+    "name": "admin",
+    "description": "Administrator",
+    "permissions": [
+      "*"
+    ]
+  }
+]

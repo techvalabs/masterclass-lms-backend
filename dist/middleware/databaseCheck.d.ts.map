@@ -1,0 +1,1 @@
+{"version":3,"file":"databaseCheck.d.ts","sourceRoot":"","sources":["../../src/middleware/databaseCheck.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,OAAO,EAAE,QAAQ,EAAE,YAAY,EAAE,MAAM,SAAS,CAAC;AAG1D;;GAEG;AACH,eAAO,MAAM,uBAAuB,GAAU,KAAK,OAAO,EAAE,KAAK,QAAQ,EAAE,MAAM,YAAY,kBAqB5F,CAAC;AAEF,eAAe,uBAAuB,CAAC"}
