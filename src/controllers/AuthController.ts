@@ -9,7 +9,7 @@ import { JwtUtils, PasswordUtils, SessionUtils } from '@/middleware/auth.js';
 import { EmailService } from '@/services/EmailService.js';
 import { logger, logAuth, logEmail } from '@/utils/logger.js';
 import { 
-  ApiError, 
+  AppError, 
   ValidationError, 
   AuthenticationError, 
   ConflictError,
@@ -153,10 +153,10 @@ export class AuthController {
           fullName,
           passwordHash,
           userData.role || 'student',
-          userData.role === 'admin' ? 3 : userData.role === 'instructor' ? 2 : 1
+          (userData.role === 'instructor' ? 2 : 1)
         ]);
         
-        userId = result.insertId;
+        userId = (result as any).insertId;
 
         // Skip instructor record creation - table may not exist yet
       } else {
@@ -335,7 +335,7 @@ export class AuthController {
       }
 
       // Generate tokens
-      const tokens = JwtUtils.generateTokens({ userId: user.id, email: user.email });
+      const tokens = JwtUtils.generateTokens({ userId: Number(user.id), email: user.email });
 
       const dbAvailable = await this.isDatabaseAvailable();
 
@@ -427,7 +427,7 @@ export class AuthController {
       }
 
       // Generate new tokens
-      const tokens = JwtUtils.generateTokens({ userId: user.id, email: user.email });
+      const tokens = JwtUtils.generateTokens({ userId: Number(user.id), email: user.email });
 
       // Blacklist old refresh token (simplified for now)
       // await SessionUtils.blacklistToken(refresh_token, user.id, 'refresh_token_used');
@@ -680,9 +680,9 @@ export class AuthController {
   }
 
   /**
-   * Update user profile
+   * Update user profile (deprecated - kept for backward compatibility)
    */
-  public async updateProfile(req: AuthRequest, res: Response): Promise<void> {
+  public async updateProfileDeprecated(req: AuthRequest, res: Response): Promise<void> {
     const updates = req.body;
 
     try {
@@ -916,7 +916,7 @@ export class AuthController {
         WHERE email = ?
       `, [email]);
 
-      if (result.affectedRows === 0) {
+      if ((result as any).affectedRows === 0) {
         throw new NotFoundError('User not found');
       }
 
@@ -971,7 +971,7 @@ export class AuthController {
         WHERE email = ?
       `, [passwordHash, email]);
 
-      if (result.affectedRows === 0) {
+      if ((result as any).affectedRows === 0) {
         throw new NotFoundError('User not found');
       }
 
@@ -1008,7 +1008,7 @@ export class AuthController {
         WHERE email = ? AND is_active = 1
       `, [passwordHash, email]);
 
-      if (result.affectedRows === 0) {
+      if ((result as any).affectedRows === 0) {
         throw new NotFoundError('User not found or inactive');
       }
 

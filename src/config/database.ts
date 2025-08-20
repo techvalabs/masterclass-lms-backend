@@ -50,9 +50,7 @@ class Database {
         database: this.config.database,
         connectionLimit: this.config.connectionLimit,
         queueLimit: this.config.queueLimit,
-        acquireTimeout: this.config.acquireTimeout,
-        timeout: this.config.timeout,
-        reconnect: this.config.reconnect,
+        connectTimeout: this.config.timeout,
         charset: this.config.charset,
         timezone: this.config.timezone,
         supportBigNumbers: true,
@@ -61,7 +59,7 @@ class Database {
         debug: process.env.NODE_ENV === 'development' && process.env.ENABLE_DEBUG === 'true',
         multipleStatements: false,
         namedPlaceholders: false,
-      });
+      } as any);
 
       // Test the connection
       await this.testConnection();
@@ -298,6 +296,7 @@ class Database {
 
 // Create and export database instance
 export const db = new Database();
+export default db;
 
 // Export types for use in other modules
 export type { DatabaseConfig };

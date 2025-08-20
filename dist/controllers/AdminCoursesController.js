@@ -90,7 +90,7 @@ export class AdminCoursesController {
                         page: Number(page),
                         limit: Number(limit),
                         total,
-                        totalPages,
+                        total_pages: totalPages,
                         hasNext: page < totalPages,
                         hasPrev: page > 1
                     },
@@ -101,8 +101,8 @@ export class AdminCoursesController {
             // Parse numeric parameters
             const page = parseInt(pageStr, 10) || 1;
             const limit = parseInt(limitStr, 10) || 20;
-            const priceMinNum = priceMin ? parseFloat(priceMin) : undefined;
-            const priceMaxNum = priceMax ? parseFloat(priceMax) : undefined;
+            const priceMinNum = priceMin ? parseFloat(String(priceMin)) : undefined;
+            const priceMaxNum = priceMax ? parseFloat(String(priceMax)) : undefined;
             // Build WHERE clause
             const conditions = [];
             const params = [];
@@ -232,9 +232,9 @@ export class AdminCoursesController {
                     page,
                     limit,
                     total,
-                    totalPages,
-                    hasNext: page < totalPages,
-                    hasPrev: page > 1
+                    total_pages: totalPages,
+                    has_next: page < totalPages,
+                    has_prev: page > 1
                 }
             };
             res.json(response);

@@ -52,10 +52,11 @@ export class AdminSettingsController {
             };
             // Filter by category if requested
             const { category } = req.query;
-            if (category && settings[category]) {
+            const categoryKey = category;
+            if (category && settings[categoryKey]) {
                 return res.json({
                     success: true,
-                    data: { [category]: settings[category] }
+                    data: { [categoryKey]: settings[categoryKey] }
                 });
             }
             res.json({
@@ -458,9 +459,9 @@ export class AdminSettingsController {
                     page,
                     limit,
                     total,
-                    totalPages,
-                    hasNext: page < totalPages,
-                    hasPrev: page > 1
+                    total_pages: totalPages,
+                    has_next: page < totalPages,
+                    has_prev: page > 1
                 }
             });
         }

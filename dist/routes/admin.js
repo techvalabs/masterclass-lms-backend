@@ -24,9 +24,9 @@ export function createAdminRoutes(db) {
     const dashboardController = new AdminDashboardController(db);
     const lessonsController = new AdminLessonsController(db);
     // TEST ENDPOINT - BYPASS AUTH FOR DEBUGGING  
-    router.get('/courses-test', coursesController.getCourses);
+    router.get('/courses-test', (req, res) => coursesController.getCourses(req, res));
     // TEST ENDPOINT FOR SETTINGS - NO AUTH REQUIRED
-    router.get('/settings-test', settingsController.getSettings);
+    router.get('/settings-test', (req, res) => settingsController.getSettings(req, res));
     // Apply admin authentication to all routes
     router.use(authenticateAdmin);
     // ===========================
@@ -38,62 +38,62 @@ export function createAdminRoutes(db) {
      * @access Admin
      */
     // TEST ENDPOINT - BYPASS AUTH FOR DEBUGGING
-    router.get('/courses-test', coursesController.getCourses);
-    router.get('/courses', coursesController.getCourses);
+    router.get('/courses-test', (req, res) => coursesController.getCourses(req, res));
+    router.get('/courses', (req, res) => coursesController.getCourses(req, res));
     /**
      * @route POST /api/admin/courses
      * @desc Create new course
      * @access Admin
      */
-    router.post('/courses', coursesController.createCourse);
+    router.post('/courses', (req, res) => coursesController.createCourse(req, res));
     /**
      * @route GET /api/admin/courses/:id
      * @desc Get course details by ID
      * @access Admin
      */
-    router.get('/courses/:id', coursesController.getCourseById);
+    router.get('/courses/:id', (req, res) => coursesController.getCourseById(req, res));
     /**
      * @route PUT /api/admin/courses/:id
      * @desc Update course
      * @access Admin
      */
-    router.put('/courses/:id', coursesController.updateCourse);
+    router.put('/courses/:id', (req, res) => coursesController.updateCourse(req, res));
     /**
      * @route DELETE /api/admin/courses/:id
      * @desc Delete course
      * @access Admin
      */
-    router.delete('/courses/:id', coursesController.deleteCourse);
+    router.delete('/courses/:id', (req, res) => coursesController.deleteCourse(req, res));
     /**
      * @route PATCH /api/admin/courses/:id/publish
      * @desc Toggle course publish status
      * @access Admin
      */
-    router.patch('/courses/:id/publish', coursesController.togglePublishStatus);
+    router.patch('/courses/:id/publish', (req, res) => coursesController.togglePublishStatus(req, res));
     /**
      * @route POST /api/admin/courses/:id/duplicate
      * @desc Duplicate course
      * @access Admin
      */
-    router.post('/courses/:id/duplicate', coursesController.duplicateCourse);
+    router.post('/courses/:id/duplicate', (req, res) => coursesController.duplicateCourse(req, res));
     /**
      * @route POST /api/admin/courses/:id/approve
      * @desc Approve course
      * @access Admin
      */
-    router.post('/courses/:id/approve', coursesController.approveCourse);
+    router.post('/courses/:id/approve', (req, res) => coursesController.approveCourse(req, res));
     /**
      * @route POST /api/admin/courses/:id/reject
      * @desc Reject course
      * @access Admin
      */
-    router.post('/courses/:id/reject', coursesController.rejectCourse);
+    router.post('/courses/:id/reject', (req, res) => coursesController.rejectCourse(req, res));
     /**
      * @route POST /api/admin/courses/bulk-action
      * @desc Bulk operations on courses (delete, archive, publish, etc.)
      * @access Admin
      */
-    router.post('/courses/bulk-action', coursesController.bulkAction);
+    router.post('/courses/bulk-action', (req, res) => coursesController.bulkAction(req, res));
     // ===========================
     // LESSONS MANAGEMENT ROUTES
     // ===========================
@@ -102,61 +102,61 @@ export function createAdminRoutes(db) {
      * @desc Get all lessons for a course
      * @access Admin
      */
-    router.get('/courses/:courseId/lessons', lessonsController.getLessons);
+    router.get('/courses/:courseId/lessons', (req, res) => lessonsController.getLessons(req, res));
     /**
      * @route GET /api/admin/courses/:courseId/lessons/:lessonId
      * @desc Get lesson by ID
      * @access Admin
      */
-    router.get('/courses/:courseId/lessons/:lessonId', lessonsController.getLessonById);
+    router.get('/courses/:courseId/lessons/:lessonId', (req, res) => lessonsController.getLessonById(req, res));
     /**
      * @route POST /api/admin/courses/:courseId/lessons
      * @desc Create new lesson
      * @access Admin
      */
-    router.post('/courses/:courseId/lessons', lessonsController.createLesson);
+    router.post('/courses/:courseId/lessons', (req, res) => lessonsController.createLesson(req, res));
     /**
      * @route PUT /api/admin/courses/:courseId/lessons/:lessonId
      * @desc Update lesson
      * @access Admin
      */
-    router.put('/courses/:courseId/lessons/:lessonId', lessonsController.updateLesson);
+    router.put('/courses/:courseId/lessons/:lessonId', (req, res) => lessonsController.updateLesson(req, res));
     /**
      * @route DELETE /api/admin/courses/:courseId/lessons/:lessonId
      * @desc Delete lesson
      * @access Admin
      */
-    router.delete('/courses/:courseId/lessons/:lessonId', lessonsController.deleteLesson);
+    router.delete('/courses/:courseId/lessons/:lessonId', (req, res) => lessonsController.deleteLesson(req, res));
     /**
      * @route PUT /api/admin/courses/:courseId/lessons/reorder
      * @desc Reorder lessons
      * @access Admin
      */
-    router.put('/courses/:courseId/lessons/reorder', lessonsController.reorderLessons);
+    router.put('/courses/:courseId/lessons/reorder', (req, res) => lessonsController.reorderLessons(req, res));
     /**
      * @route GET /api/admin/lessons/:lessonId/quizzes
      * @desc Get quizzes for a lesson
      * @access Admin
      */
-    router.get('/lessons/:lessonId/quizzes', lessonsController.getQuizzes);
+    router.get('/lessons/:lessonId/quizzes', (req, res) => lessonsController.getQuizzes(req, res));
     /**
      * @route POST /api/admin/lessons/:lessonId/quizzes
      * @desc Create quiz for a lesson
      * @access Admin
      */
-    router.post('/lessons/:lessonId/quizzes', lessonsController.createQuiz);
+    router.post('/lessons/:lessonId/quizzes', (req, res) => lessonsController.createQuiz(req, res));
     /**
      * @route PUT /api/admin/quizzes/:quizId
      * @desc Update quiz
      * @access Admin
      */
-    router.put('/quizzes/:quizId', lessonsController.updateQuiz);
+    router.put('/quizzes/:quizId', (req, res) => lessonsController.updateQuiz(req, res));
     /**
      * @route DELETE /api/admin/quizzes/:quizId
      * @desc Delete quiz
      * @access Admin
      */
-    router.delete('/quizzes/:quizId', lessonsController.deleteQuiz);
+    router.delete('/quizzes/:quizId', (req, res) => lessonsController.deleteQuiz(req, res));
     // ===========================
     // USERS MANAGEMENT ROUTES
     // ===========================
@@ -165,73 +165,73 @@ export function createAdminRoutes(db) {
      * @desc Get all users with admin filters and pagination
      * @access Admin
      */
-    router.get('/users', usersController.getUsers);
+    router.get('/users', (req, res) => usersController.getUsers(req, res));
     /**
      * @route POST /api/admin/users
      * @desc Create a new user
      * @access Admin
      */
-    router.post('/users', usersController.createUser);
+    router.post('/users', (req, res) => usersController.createUser(req, res));
     /**
      * @route GET /api/admin/users/:id
      * @desc Get user details by ID
      * @access Admin
      */
-    router.get('/users/:id', usersController.getUserById);
+    router.get('/users/:id', (req, res) => usersController.getUserById(req, res));
     /**
      * @route PUT /api/admin/users/:id
      * @desc Update user
      * @access Admin
      */
-    router.put('/users/:id', usersController.updateUser);
+    router.put('/users/:id', (req, res) => usersController.updateUser(req, res));
     /**
      * @route DELETE /api/admin/users/:id
      * @desc Delete user
      * @access Admin
      */
-    router.delete('/users/:id', usersController.deleteUser);
+    router.delete('/users/:id', (req, res) => usersController.deleteUser(req, res));
     /**
      * @route POST /api/admin/users/:id/change-role
      * @desc Change user role
      * @access Admin
      */
-    router.post('/users/:id/change-role', usersController.changeUserRole);
+    router.post('/users/:id/change-role', (req, res) => usersController.changeUserRole(req, res));
     /**
      * @route POST /api/admin/users/:id/toggle-status
      * @desc Toggle user status (activate/deactivate)
      * @access Admin
      */
-    router.post('/users/:id/toggle-status', usersController.toggleUserStatus);
+    router.post('/users/:id/toggle-status', (req, res) => usersController.toggleUserStatus(req, res));
     /**
      * @route GET /api/admin/users/:id/statistics
      * @desc Get user statistics
      * @access Admin
      */
-    router.get('/users/:id/statistics', usersController.getUserStatistics);
+    router.get('/users/:id/statistics', (req, res) => usersController.getUserStatistics(req, res));
     /**
      * @route GET /api/admin/users/:id/activity
      * @desc Get user activity history
      * @access Admin
      */
-    router.get('/users/:id/activity', usersController.getUserActivity);
+    router.get('/users/:id/activity', (req, res) => usersController.getUserActivity(req, res));
     /**
      * @route POST /api/admin/users/:id/send-email
      * @desc Send email to specific user
      * @access Admin
      */
-    router.post('/users/:id/send-email', usersController.sendEmailToUser);
+    router.post('/users/:id/send-email', (req, res) => usersController.sendEmailToUser(req, res));
     /**
      * @route POST /api/admin/users/bulk-email
      * @desc Send bulk emails to users
      * @access Admin
      */
-    router.post('/users/bulk-email', usersController.sendBulkEmail);
+    router.post('/users/bulk-email', (req, res) => usersController.sendBulkEmail(req, res));
     /**
      * @route POST /api/admin/users/bulk-action
      * @desc Bulk operations on users (activate, deactivate, delete, etc.)
      * @access Admin
      */
-    router.post('/users/bulk-action', usersController.bulkAction);
+    router.post('/users/bulk-action', (req, res) => usersController.bulkAction(req, res));
     // ===========================
     // ANALYTICS ROUTES
     // ===========================
@@ -240,31 +240,31 @@ export function createAdminRoutes(db) {
      * @desc Get dashboard overview analytics
      * @access Admin
      */
-    router.get('/analytics/overview', analyticsController.getOverview);
+    router.get('/analytics/overview', (req, res) => analyticsController.getOverview(req, res));
     /**
      * @route GET /api/admin/analytics/revenue
      * @desc Get revenue analytics
      * @access Admin
      */
-    router.get('/analytics/revenue', analyticsController.getRevenue);
+    router.get('/analytics/revenue', (req, res) => analyticsController.getRevenue(req, res));
     /**
      * @route GET /api/admin/analytics/users
      * @desc Get user analytics
      * @access Admin
      */
-    router.get('/analytics/users', analyticsController.getUsers);
+    router.get('/analytics/users', (req, res) => analyticsController.getUsers(req, res));
     /**
      * @route GET /api/admin/analytics/courses
      * @desc Get course performance analytics
      * @access Admin
      */
-    router.get('/analytics/courses', analyticsController.getCourses);
+    router.get('/analytics/courses', (req, res) => analyticsController.getCourses(req, res));
     /**
      * @route GET /api/admin/analytics/export
      * @desc Export analytics data
      * @access Admin
      */
-    router.get('/analytics/export', analyticsController.exportData);
+    router.get('/analytics/export', (req, res) => analyticsController.exportData(req, res));
     // ===========================
     // PAYMENTS ROUTES
     // ===========================
@@ -273,43 +273,43 @@ export function createAdminRoutes(db) {
      * @desc Get transaction history with filters
      * @access Admin
      */
-    router.get('/payments/transactions', paymentsController.getTransactions);
+    router.get('/payments/transactions', (req, res) => paymentsController.getTransactions(req, res));
     /**
      * @route GET /api/admin/payments/refunds
      * @desc Get refund management data
      * @access Admin
      */
-    router.get('/payments/refunds', paymentsController.getRefunds);
+    router.get('/payments/refunds', (req, res) => paymentsController.getRefunds(req, res));
     /**
      * @route POST /api/admin/payments/refund
      * @desc Process refund
      * @access Admin
      */
-    router.post('/payments/refund', paymentsController.processRefund);
+    router.post('/payments/refund', (req, res) => paymentsController.processRefund(req, res));
     /**
      * @route GET /api/admin/payments/coupons
      * @desc Get all coupons
      * @access Admin
      */
-    router.get('/payments/coupons', paymentsController.getCoupons);
+    router.get('/payments/coupons', (req, res) => paymentsController.getCoupons(req, res));
     /**
      * @route POST /api/admin/payments/coupons
      * @desc Create new coupon
      * @access Admin
      */
-    router.post('/payments/coupons', paymentsController.createCoupon);
+    router.post('/payments/coupons', (req, res) => paymentsController.createCoupon(req, res));
     /**
      * @route PUT /api/admin/payments/coupons/:id
      * @desc Update coupon
      * @access Admin
      */
-    router.put('/payments/coupons/:id', paymentsController.updateCoupon);
+    router.put('/payments/coupons/:id', (req, res) => paymentsController.updateCoupon(req, res));
     /**
      * @route DELETE /api/admin/payments/coupons/:id
      * @desc Delete coupon
      * @access Admin
      */
-    router.delete('/payments/coupons/:id', paymentsController.deleteCoupon);
+    router.delete('/payments/coupons/:id', (req, res) => paymentsController.deleteCoupon(req, res));
     // ===========================
     // CONTENT UPLOAD ROUTES
     // ===========================
@@ -318,37 +318,37 @@ export function createAdminRoutes(db) {
      * @desc File upload (videos, PDFs, images)
      * @access Admin
      */
-    router.post('/content/upload', contentController.uploadFiles);
+    router.post('/content/upload', (req, res) => contentController.uploadFiles(req, res));
     /**
      * @route GET /api/admin/content/files
      * @desc List uploaded files
      * @access Admin
      */
-    router.get('/content/files', contentController.getFiles);
+    router.get('/content/files', (req, res) => contentController.getFiles(req, res));
     /**
      * @route GET /api/admin/content/files/:id
      * @desc Get file details by ID
      * @access Admin
      */
-    router.get('/content/files/:id', contentController.getFileById);
+    router.get('/content/files/:id', (req, res) => contentController.getFileById(req, res));
     /**
      * @route PUT /api/admin/content/files/:id
      * @desc Update file metadata
      * @access Admin
      */
-    router.put('/content/files/:id', contentController.updateFile);
+    router.put('/content/files/:id', (req, res) => contentController.updateFile(req, res));
     /**
      * @route DELETE /api/admin/content/files/:id
      * @desc Delete file
      * @access Admin
      */
-    router.delete('/content/files/:id', contentController.deleteFile);
+    router.delete('/content/files/:id', (req, res) => contentController.deleteFile(req, res));
     /**
      * @route POST /api/admin/content/files/bulk-delete
      * @desc Bulk delete files
      * @access Admin
      */
-    router.post('/content/files/bulk-delete', contentController.bulkDeleteFiles);
+    router.post('/content/files/bulk-delete', (req, res) => contentController.bulkDeleteFiles(req, res));
     // ===========================
     // SETTINGS ROUTES
     // ===========================
@@ -357,55 +357,55 @@ export function createAdminRoutes(db) {
      * @desc Get all system settings
      * @access Admin
      */
-    router.get('/settings', settingsController.getSettings);
+    router.get('/settings', (req, res) => settingsController.getSettings(req, res));
     /**
      * @route PUT /api/admin/settings/:category
      * @desc Update system settings by category
      * @access Admin
      */
-    router.put('/settings/:category', settingsController.updateSettings);
+    router.put('/settings/:category', (req, res) => settingsController.updateSettings(req, res));
     /**
      * @route GET /api/admin/settings/:category
      * @desc Get settings by category
      * @access Admin
      */
-    router.get('/settings/:category', settingsController.getSettings);
+    router.get('/settings/:category', (req, res) => settingsController.getSettings(req, res));
     /**
      * @route GET /api/admin/settings/system-info
      * @desc Get system information
      * @access Admin
      */
-    router.get('/settings/system-info', settingsController.getSystemInfo);
+    router.get('/settings/system-info', (req, res) => settingsController.getSystemInfo(req, res));
     /**
      * @route POST /api/admin/settings/backup
      * @desc Create database backup
      * @access Admin
      */
-    router.post('/settings/backup', settingsController.createBackup);
+    router.post('/settings/backup', (req, res) => settingsController.createBackup(req, res));
     /**
      * @route GET /api/admin/settings/backup/:id
      * @desc Get backup status
      * @access Admin
      */
-    router.get('/settings/backup/:id', settingsController.getBackupStatus);
+    router.get('/settings/backup/:id', (req, res) => settingsController.getBackupStatus(req, res));
     /**
      * @route GET /api/admin/settings/backups
      * @desc Get all backups
      * @access Admin
      */
-    router.get('/settings/backups', settingsController.getBackups);
+    router.get('/settings/backups', (req, res) => settingsController.getBackups(req, res));
     /**
      * @route DELETE /api/admin/settings/backup/:id
      * @desc Delete backup
      * @access Admin
      */
-    router.delete('/settings/backup/:id', settingsController.deleteBackup);
+    router.delete('/settings/backup/:id', (req, res) => settingsController.deleteBackup(req, res));
     /**
      * @route POST /api/admin/settings/clear-cache
      * @desc Clear application cache
      * @access Admin
      */
-    router.post('/settings/clear-cache', settingsController.clearCache);
+    router.post('/settings/clear-cache', (req, res) => settingsController.clearCache(req, res));
     /**
      * @route POST /api/admin/settings/restore
      * @desc Restore from backup (placeholder)
@@ -564,25 +564,25 @@ export function createAdminRoutes(db) {
      * @desc Get dashboard statistics
      * @access Admin
      */
-    router.get('/dashboard/stats', dashboardController.getDashboardStats);
+    router.get('/dashboard/stats', (req, res) => dashboardController.getDashboardStats(req, res));
     /**
      * @route GET /api/admin/dashboard/recent-users
      * @desc Get recent users
      * @access Admin
      */
-    router.get('/dashboard/recent-users', dashboardController.getRecentUsers);
+    router.get('/dashboard/recent-users', (req, res) => dashboardController.getRecentUsers(req, res));
     /**
      * @route GET /api/admin/dashboard/recent-courses
      * @desc Get recent courses
      * @access Admin
      */
-    router.get('/dashboard/recent-courses', dashboardController.getRecentCourses);
+    router.get('/dashboard/recent-courses', (req, res) => dashboardController.getRecentCourses(req, res));
     /**
      * @route GET /api/admin/analytics
      * @desc Get analytics data
      * @access Admin
      */
-    router.get('/analytics', dashboardController.getAnalytics);
+    router.get('/analytics', (req, res) => dashboardController.getAnalytics(req, res));
     // ===========================
     // TEST ROUTES (NO AUTH REQUIRED)
     // ===========================

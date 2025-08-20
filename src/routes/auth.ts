@@ -15,70 +15,70 @@ const authController = new AuthController();
 // User Registration
 router.post('/register', 
   validate(AuthValidation.register),
-  authController.register
+  (req, res) => authController.register(req as any, res)
 );
 
 // Email Verification
 router.get('/verify-email/:token', 
-  authController.verifyEmail
+  (req, res) => authController.verifyEmail(req as any, res)
 );
 
 // Resend Email Verification
 router.post('/resend-verification',
   validate(AuthValidation.forgotPassword), // Reuse email validation
-  authController.resendVerification
+  (req, res) => authController.resendVerification(req as any, res)
 );
 
 // User Login
 router.post('/login',
   validate(AuthValidation.login),
-  authController.login
+  (req, res) => authController.login(req as any, res)
 );
 
 // Refresh Token
 router.post('/refresh-token',
   validate(AuthValidation.refreshToken),
-  authController.refreshToken
+  (req, res) => authController.refreshToken(req as any, res)
 );
 
 // Refresh Token (alternative endpoint for frontend compatibility)
 router.post('/refresh',
   validate(AuthValidation.refreshToken),
-  authController.refreshToken
+  (req, res) => authController.refreshToken(req as any, res)
 );
 
 // User Logout
 router.post('/logout',
   authenticate,
-  authController.logout
+  (req, res) => authController.logout(req as any, res)
 );
 
 // Logout from all devices
 router.post('/logout-all',
   authenticate,
-  authController.logoutAll
+  (req, res) => authController.logoutAll(req as any, res)
 );
 
 // Forgot Password
 router.post('/forgot-password',
-  authController.forgotPassword
+  (req, res) => authController.forgotPassword(req as any, res)
 );
 
 // Reset Password
 router.post('/reset-password',
-  authController.resetPassword
+  (req, res) => authController.resetPassword(req as any, res)
 );
 
 // Admin Password Reset (Development/Debug only)
 router.post('/admin-reset-password',
   validate(AuthValidation.resetUserPassword),
-  authController.adminResetPassword
+  (req, res) => authController.adminResetPassword(req as any, res)
 );
 
 // Change Password (authenticated user)
 router.post('/change-password',
   authenticate,
-  authController.changePassword
+  (req, res) => authController.changePassword(req as any, res)
 );
 
 // Verify token (check if user is authenticated)
@@ -98,72 +98,72 @@ router.get('/verify',
 // Get current user profile
 router.get('/me',
   authenticate,
-  authController.getCurrentUser
+  (req, res) => authController.getCurrentUser(req as any, res)
 );
 
 // Update current user profile
 router.put('/me',
   authenticate,
-  authController.updateProfile
+  (req, res) => authController.updateProfile(req as any, res)
 );
 
 // Delete account
 router.delete('/me',
   authenticate,
-  authController.deleteAccount
+  (req, res) => authController.deleteAccount(req as any, res)
 );
 
 // Check email availability
 router.post('/check-email',
-  authController.checkEmailAvailability
+  (req, res) => authController.checkEmailAvailability(req as any, res)
 );
 
 // Social Authentication (Google, Facebook, etc.)
 router.post('/social/google',
-  authController.googleAuth
+  (req, res) => authController.googleAuth(req as any, res)
 );
 
 router.post('/social/facebook',
-  authController.facebookAuth
+  (req, res) => authController.facebookAuth(req as any, res)
 );
 
 // Two-Factor Authentication routes
 router.post('/2fa/enable',
   authenticate,
-  authController.enableTwoFactor
+  (req, res) => authController.enableTwoFactor(req as any, res)
 );
 
 router.post('/2fa/disable',
   authenticate,
-  authController.disableTwoFactor
+  (req, res) => authController.disableTwoFactor(req as any, res)
 );
 
 router.post('/2fa/verify',
   authenticate,
-  authController.verifyTwoFactor
+  (req, res) => authController.verifyTwoFactor(req as any, res)
 );
 
 // Account recovery
 router.post('/recover-account',
-  authController.recoverAccount
+  (req, res) => authController.recoverAccount(req as any, res)
 );
 
 // Get authentication status (public route with optional auth)
 router.get('/status',
   optionalAuth,
-  authController.getAuthStatus
+  (req, res) => authController.getAuthStatus(req as any, res)
 );
 
 // Temporary route for promoting user to admin (development only)
 router.post('/promote-to-admin',
   validate(AuthValidation.promoteToAdmin),
-  authController.promoteToAdmin
+  (req, res) => authController.promoteToAdmin(req as any, res)
 );
 
 // Temporary route for resetting user password (development only)
 router.post('/reset-user-password',
   validate(AuthValidation.resetUserPassword),
-  authController.resetUserPassword
+  (req, res) => authController.resetUserPassword(req as any, res)
 );
 
 // Profile Management Routes
@@ -171,26 +171,26 @@ router.post('/reset-user-password',
 // Get detailed profile with role-specific data and stats
 router.get('/profile',
   authenticate,
-  authController.getProfile
+  (req, res) => authController.getProfile(req as any, res)
 );
 
 // Update profile information
 router.put('/profile', 
   authenticate,
-  authController.updateProfile
+  (req, res) => authController.updateProfile(req as any, res)
 );
 
 // Upload profile avatar
 router.post('/profile/avatar',
   authenticate,
   upload.single('image'),
-  authController.uploadAvatar
+  (req, res) => authController.uploadAvatar(req as any, res)
 );
 
 // Get profile statistics
 router.get('/profile/stats',
   authenticate,
-  authController.getProfileStats
+  (req, res) => authController.getProfileStats(req as any, res)
 );
 
 // Debug endpoint to check permissions data
@@ -230,7 +230,7 @@ router.get('/debug-permissions/:userId', async (req, res) => {
       }
     });
   } catch (error) {
-    res.json({ error: error.message });
+    res.json({ error: (error as Error).message });
   }
 });
 

@@ -145,7 +145,7 @@ export class CDNService {
         }
       );
 
-      const data = await response.json();
+      const data: any = await response.json();
       if (data.success) {
         return data.result.playback.hls; // Return HLS URL
       } else {

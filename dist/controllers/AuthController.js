@@ -122,7 +122,7 @@ export class AuthController {
                     fullName,
                     passwordHash,
                     userData.role || 'student',
-                    userData.role === 'admin' ? 3 : userData.role === 'instructor' ? 2 : 1
+                    (userData.role === 'instructor' ? 2 : 1)
                 ]);
                 userId = result.insertId;
                 // Skip instructor record creation - table may not exist yet
@@ -272,7 +272,7 @@ export class AuthController {
                 throw new AuthenticationError('Invalid email or password');
             }
             // Generate tokens
-            const tokens = JwtUtils.generateTokens({ userId: user.id, email: user.email });
+            const tokens = JwtUtils.generateTokens({ userId: Number(user.id), email: user.email });
             const dbAvailable = await this.isDatabaseAvailable();
             // Update last login if database is available
             if (dbAvailable) {
@@ -356,7 +356,7 @@ export class AuthController {
                 throw new AuthenticationError('User is inactive');
             }
             // Generate new tokens
-            const tokens = JwtUtils.generateTokens({ userId: user.id, email: user.email });
+            const tokens = JwtUtils.generateTokens({ userId: Number(user.id), email: user.email });
             // Blacklist old refresh token (simplified for now)
             // await SessionUtils.blacklistToken(refresh_token, user.id, 'refresh_token_used');
             logAuth('Token refreshed', user.email, true, { userId: user.id });
@@ -563,9 +563,9 @@ export class AuthController {
         }
     }
     /**
-     * Update user profile
+     * Update user profile (deprecated - kept for backward compatibility)
      */
-    async updateProfile(req, res) {
+    async updateProfileDeprecated(req, res) {
         const updates = req.body;
         try {
             if (!req.user) {

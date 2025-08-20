@@ -26,7 +26,7 @@ export class EmailService {
   public static async initialize(): Promise<void> {
     try {
       // Create transporter
-      this.transporter = nodemailer.createTransporter({
+      this.transporter = nodemailer.createTransport({
         host: config.email.host,
         port: config.email.port,
         secure: config.email.secure,
@@ -111,9 +111,9 @@ export class EmailService {
     } catch (error) {
       logger.email('Email send failed', 
         Array.isArray(options.to) ? options.to.join(', ') : options.to, 
-        options.subject, 
-        error
+        options.subject
       );
+      logger.error('Email error details:', error);
       return false;
     }
   }

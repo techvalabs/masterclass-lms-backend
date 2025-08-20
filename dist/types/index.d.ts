@@ -370,12 +370,15 @@ export interface FileUpload {
     created_at: Date;
 }
 export interface AuthUser extends JwtPayload {
-    id: string;
+    id: number;
     email: string;
     name: string;
-    role: 'student' | 'instructor' | 'admin';
+    role: string;
     avatar?: string;
-    is_active: boolean;
+    isActive: boolean;
+    roleId: number;
+    permissions: string[];
+    isVerified: boolean;
 }
 export interface AuthRequest extends Request {
     user?: AuthUser;
@@ -602,15 +605,4 @@ export interface AppConfig {
         cors_origin: string;
     };
 }
-declare const _default: {
-    User: any;
-    Course: any;
-    Module: any;
-    Lesson: any;
-    Enrollment: any;
-    AuthUser: any;
-    AuthRequest: any;
-    ApiResponse: any;
-};
-export default _default;
 //# sourceMappingURL=index.d.ts.map

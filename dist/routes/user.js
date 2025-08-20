@@ -59,27 +59,27 @@ router.get('/settings', authenticate, async (req, res) => {
                 },
                 settings: {
                     notifications: {
-                        email: notifications.email !== false,
-                        push: notifications.push !== false,
-                        sms: notifications.sms || false,
-                        courseUpdates: notifications.courseUpdates !== false,
-                        promotionalEmails: notifications.promotionalEmails !== false,
-                        forumNotifications: notifications.forumNotifications !== false,
-                        assignmentReminders: notifications.assignmentReminders !== false,
+                        email: notifications?.email !== false,
+                        push: notifications?.push !== false,
+                        sms: notifications?.sms || false,
+                        courseUpdates: notifications?.courseUpdates !== false,
+                        promotionalEmails: notifications?.promotionalEmails !== false,
+                        forumNotifications: notifications?.forumNotifications !== false,
+                        assignmentReminders: notifications?.assignmentReminders !== false,
                         ...notifications
                     },
                     privacy: {
-                        profileVisibility: privacy.profileVisibility || 'public',
-                        showEmail: privacy.showEmail || false,
-                        showPhone: privacy.showPhone || false,
-                        allowMessages: privacy.allowMessages !== false,
+                        profileVisibility: privacy?.profileVisibility || 'public',
+                        showEmail: privacy?.showEmail || false,
+                        showPhone: privacy?.showPhone || false,
+                        allowMessages: privacy?.allowMessages !== false,
                         ...privacy
                     },
                     appearance: {
-                        theme: appearance.theme || 'light',
-                        language: appearance.language || 'en',
-                        timezone: appearance.timezone || 'UTC',
-                        dateFormat: appearance.dateFormat || 'MM/DD/YYYY',
+                        theme: appearance?.theme || 'light',
+                        language: appearance?.language || 'en',
+                        timezone: appearance?.timezone || 'UTC',
+                        dateFormat: appearance?.dateFormat || 'MM/DD/YYYY',
                         ...appearance
                     },
                     security: {

@@ -72,6 +72,7 @@ declare class Database {
     getPool(): mysql.Pool | null;
 }
 export declare const db: Database;
+export default db;
 export type { DatabaseConfig };
 export type QueryResult<T> = T[];
 export type QueryOneResult<T> = T | null;

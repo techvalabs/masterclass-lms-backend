@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Database } from '@/config/database.js';
-import { AuthService } from '@/middleware/auth.js';
+import Database from '@/config/database.js';
+import { PasswordUtils } from '@/middleware/auth.js';
 import { logger } from '@/utils/logger.js';
 /**
  * Users Seeder
@@ -63,7 +63,7 @@ export async function seedUsers() {
         logger.info('Seeding users...');
         for (const user of users) {
             // Hash password
-            const passwordHash = await AuthService.hashPassword(user.password);
+            const passwordHash = await PasswordUtils.hash(user.password);
             // Insert user
             await Database.query(`
         INSERT INTO users (

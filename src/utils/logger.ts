@@ -71,7 +71,7 @@ if (process.env.NODE_ENV === 'production' || process.env.LOG_FILE) {
       filename: logFile,
       level: 'info',
       format: prodFormat,
-      maxsize: parseInt(process.env.LOG_MAX_SIZE?.replace('m', '')) * 1024 * 1024 || 10 * 1024 * 1024, // Default 10MB
+      maxsize: parseInt(process.env.LOG_MAX_SIZE?.replace('m', '') || '10') * 1024 * 1024, // Default 10MB
       maxFiles: parseInt(process.env.LOG_MAX_FILES || '5'),
       tailable: true,
     })
@@ -228,16 +228,20 @@ export const logPerformance = (operation: string, duration: number, metadata?: a
 };
 
 // Add additional methods to logger
-logger.upload = (filename: string, size: number) => {
+(logger as any).upload = (filename: string, size: number) => {
   logger.info('File Upload', { filename, size });
 };
 
-logger.request = (req: any, res: any, duration: number) => {
+(logger as any).request = (req: any, res: any, duration: number) => {
   logApiResponse(req.method, req.url, res.statusCode, duration, req.user?.id);
 };
 
-logger.security = (message: string, metadata?: any) => {
+(logger as any).security = (message: string, metadata?: any) => {
   logger.warn(message, metadata);
+};
+
+(logger as any).email = (message: string, to: string, subject: string) => {
+  logger.info(message, { to, subject });
 };
 
 // Export format for Morgan

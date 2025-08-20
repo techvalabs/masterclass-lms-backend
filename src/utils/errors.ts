@@ -9,6 +9,7 @@ export class AppError extends Error {
   public isOperational: boolean;
   public code?: string;
   public field?: string;
+  public details?: any;
 
   constructor(message: string, statusCode: number = 500, code?: string, field?: string) {
     super(message);

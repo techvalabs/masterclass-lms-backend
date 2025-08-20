@@ -85,7 +85,7 @@ export const JwtUtils = {
         expiresIn: process.env.JWT_EXPIRES_IN || '15m',
         issuer: 'masterclass-lms',
         audience: 'masterclass-lms-users'
-      }
+      } as jwt.SignOptions
     );
   },
 
@@ -105,7 +105,7 @@ export const JwtUtils = {
         expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
         issuer: 'masterclass-lms',
         audience: 'masterclass-lms-users'
-      }
+      } as jwt.SignOptions
     );
   },
 
@@ -406,7 +406,7 @@ export const authenticate = asyncHandler(async (req: Request, res: Response, nex
       id: user.id,
       email: user.email,
       name: user.name,
-      role: user.role_name,
+      role: (user as any).role_name,
       roleId: user.role_id,
       permissions,
       isVerified: user.email_verified,
@@ -415,7 +415,7 @@ export const authenticate = asyncHandler(async (req: Request, res: Response, nex
 
     logAuth('Token verified', user.email, true, {
       userId: user.id,
-      role: user.role_name
+      role: (user as any).role_name
     });
 
     next();

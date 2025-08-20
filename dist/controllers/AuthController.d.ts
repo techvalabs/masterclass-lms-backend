@@ -71,6 +71,10 @@ export declare class AuthController {
      */
     getCurrentUser(req: AuthRequest, res: Response): Promise<void>;
     /**
+     * Update user profile (deprecated - kept for backward compatibility)
+     */
+    updateProfileDeprecated(req: AuthRequest, res: Response): Promise<void>;
+    /**
      * Delete user account
      */
     deleteAccount(req: AuthRequest, res: Response): Promise<void>;
@@ -130,6 +134,10 @@ export declare class AuthController {
      * Get current user profile with role-specific data
      */
     getProfile(req: AuthRequest, res: Response): Promise<void>;
+    /**
+     * Update user profile
+     */
+    updateProfile(req: AuthRequest, res: Response): Promise<void>;
     /**
      * Upload profile avatar
      */

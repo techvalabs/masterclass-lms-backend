@@ -22,30 +22,11 @@ export class RedisClient {
           host: config.redis.host,
           port: config.redis.port,
           connectTimeout: 10000,
-          lazyConnect: true,
         },
         password: config.redis.password,
         database: config.redis.db,
-        retry_strategy: (options) => {
-          if (options.error && options.error.code === 'ECONNREFUSED') {
-            logger.error('Redis connection refused');
-            return new Error('Redis connection refused');
-          }
-          
-          if (options.total_retry_time > 1000 * 60 * 60) {
-            logger.error('Redis retry time exhausted');
-            return new Error('Retry time exhausted');
-          }
-          
-          if (options.attempt > 10) {
-            logger.error('Redis retry attempts exhausted');
-            return undefined;
-          }
-          
-          // Reconnect after 2^attempt * 100ms (exponential backoff)
-          return Math.min(options.attempt * 100, 3000);
-        },
-      });
+        lazyConnect: true,
+      } as any);
 
       // Event handlers
       this.client.on('error', (error) => {

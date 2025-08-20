@@ -39,7 +39,7 @@ export class AdminDashboardController {
         return globalDb;
       }
     } catch (e) {
-      console.log('⚠️ Global database not available:', e.message);
+      console.log('⚠️ Global database not available:', (e as Error).message);
     }
     
     if (!this.db) {
@@ -56,7 +56,7 @@ export class AdminDashboardController {
       this.getDatabase();
       return true;
     } catch (e) {
-      console.log('❌ Database connection check failed:', e.message);
+      console.log('❌ Database connection check failed:', (e as Error).message);
       return false;
     }
   }

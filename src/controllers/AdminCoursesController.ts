@@ -51,7 +51,7 @@ export class AdminCoursesController {
         return globalDb;
       }
     } catch (e) {
-      console.log('⚠️ Global database not available:', e.message);
+      console.log('⚠️ Global database not available:', (e as Error).message);
     }
     
     if (!this.db) {
@@ -80,7 +80,7 @@ export class AdminCoursesController {
       this.getDatabase();
       return true;
     } catch (e) {
-      console.log('❌ Database connection check failed:', e.message);
+      console.log('❌ Database connection check failed:', (e as Error).message);
       return false;
     }
   }
@@ -141,7 +141,7 @@ export class AdminCoursesController {
             page: Number(page), 
             limit: Number(limit), 
             total, 
-            totalPages, 
+            total_pages: totalPages, 
             hasNext: page < totalPages, 
             hasPrev: page > 1 
           },
@@ -165,10 +165,10 @@ export class AdminCoursesController {
       } = req.query as CourseFilters;
 
       // Parse numeric parameters
-      const page = parseInt(pageStr, 10) || 1;
-      const limit = parseInt(limitStr, 10) || 20;
-      const priceMinNum = priceMin ? parseFloat(priceMin) : undefined;
-      const priceMaxNum = priceMax ? parseFloat(priceMax) : undefined;
+      const page = parseInt(pageStr as string, 10) || 1;
+      const limit = parseInt(limitStr as string, 10) || 20;
+      const priceMinNum = priceMin ? parseFloat(String(priceMin)) : undefined;
+      const priceMaxNum = priceMax ? parseFloat(String(priceMax)) : undefined;
 
       // Build WHERE clause
       const conditions: string[] = [];
@@ -316,9 +316,9 @@ export class AdminCoursesController {
           page,
           limit,
           total,
-          totalPages,
-          hasNext: page < totalPages,
-          hasPrev: page > 1
+          total_pages: totalPages,
+          has_next: page < totalPages,
+          has_prev: page > 1
         }
       };
 

@@ -48,7 +48,7 @@ if (process.env.NODE_ENV === 'production' || process.env.LOG_FILE) {
         filename: logFile,
         level: 'info',
         format: prodFormat,
-        maxsize: parseInt(process.env.LOG_MAX_SIZE?.replace('m', '')) * 1024 * 1024 || 10 * 1024 * 1024, // Default 10MB
+        maxsize: parseInt(process.env.LOG_MAX_SIZE?.replace('m', '') || '10') * 1024 * 1024, // Default 10MB
         maxFiles: parseInt(process.env.LOG_MAX_FILES || '5'),
         tailable: true,
     }));
@@ -193,6 +193,9 @@ logger.request = (req, res, duration) => {
 };
 logger.security = (message, metadata) => {
     logger.warn(message, metadata);
+};
+logger.email = (message, to, subject) => {
+    logger.info(message, { to, subject });
 };
 // Export format for Morgan
 export const morganFormat = process.env.NODE_ENV === 'development'

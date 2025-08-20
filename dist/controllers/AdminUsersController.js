@@ -34,13 +34,13 @@ export class AdminUsersController {
                 // Apply filters to mock data
                 let filteredUsers = [...realisticUsers];
                 if (roleFilter) {
-                    filteredUsers = filteredUsers.filter(u => u.role.name === roleFilter);
+                    filteredUsers = filteredUsers.filter(u => u.role === roleFilter);
                 }
                 if (status !== 'all') {
                     filteredUsers = filteredUsers.filter(u => u.isActive === (status === 'active'));
                 }
                 if (verified !== 'all') {
-                    filteredUsers = filteredUsers.filter(u => u.emailVerified === (verified === 'true'));
+                    filteredUsers = filteredUsers.filter(u => u.isVerified === (verified === 'true'));
                 }
                 if (search) {
                     const searchLower = search.toLowerCase();
@@ -87,8 +87,8 @@ export class AdminUsersController {
                         totalPages
                     },
                     meta: {
-                        hasNext: page < totalPages,
-                        hasPrev: page > 1
+                        has_next: page < totalPages,
+                        has_prev: page > 1
                     },
                     message: "Using realistic mock data - database not connected"
                 });
@@ -219,15 +219,13 @@ export class AdminUsersController {
                             : 0
                     }
                 })),
-                pagination: {
+                meta: {
                     page,
                     limit,
                     total,
-                    totalPages
-                },
-                meta: {
-                    hasNext: page < totalPages,
-                    hasPrev: page > 1
+                    total_pages: totalPages,
+                    has_next: page < totalPages,
+                    has_prev: page > 1
                 }
             };
             res.json(response);
@@ -268,7 +266,7 @@ export class AdminUsersController {
                             totalEnrollments: Math.floor(Math.random() * 10) + 1,
                             completedCourses: Math.floor(Math.random() * 5),
                             totalSpent: Math.floor(Math.random() * 1000) + 100,
-                            coursesCreated: user.role.name === 'instructor' ? Math.floor(Math.random() * 5) + 1 : 0,
+                            coursesCreated: user.role === 'instructor' ? Math.floor(Math.random() * 5) + 1 : 0,
                             reviewsGiven: Math.floor(Math.random() * 15),
                             avgRatingGiven: +(3.5 + Math.random() * 1.5).toFixed(1),
                             completionRate: Math.floor(Math.random() * 100)

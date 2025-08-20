@@ -32,9 +32,7 @@ class Database {
                 database: this.config.database,
                 connectionLimit: this.config.connectionLimit,
                 queueLimit: this.config.queueLimit,
-                acquireTimeout: this.config.acquireTimeout,
-                timeout: this.config.timeout,
-                reconnect: this.config.reconnect,
+                connectTimeout: this.config.timeout,
                 charset: this.config.charset,
                 timezone: this.config.timezone,
                 supportBigNumbers: true,
@@ -256,6 +254,7 @@ class Database {
 }
 // Create and export database instance
 export const db = new Database();
+export default db;
 // Helper function for building WHERE clauses
 export function buildWhereClause(conditions) {
     const keys = Object.keys(conditions).filter(key => conditions[key] !== undefined);

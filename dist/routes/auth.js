@@ -10,30 +10,30 @@ import upload from '@/middleware/upload.js';
 const router = Router();
 const authController = new AuthController();
 // User Registration
-router.post('/register', validate(AuthValidation.register), authController.register);
+router.post('/register', validate(AuthValidation.register), (req, res) => authController.register(req, res));
 // Email Verification
-router.get('/verify-email/:token', authController.verifyEmail);
+router.get('/verify-email/:token', (req, res) => authController.verifyEmail(req, res));
 // Resend Email Verification
 router.post('/resend-verification', validate(AuthValidation.forgotPassword), // Reuse email validation
-authController.resendVerification);
+(req, res) => authController.resendVerification(req, res));
 // User Login
-router.post('/login', validate(AuthValidation.login), authController.login);
+router.post('/login', validate(AuthValidation.login), (req, res) => authController.login(req, res));
 // Refresh Token
-router.post('/refresh-token', validate(AuthValidation.refreshToken), authController.refreshToken);
+router.post('/refresh-token', validate(AuthValidation.refreshToken), (req, res) => authController.refreshToken(req, res));
 // Refresh Token (alternative endpoint for frontend compatibility)
-router.post('/refresh', validate(AuthValidation.refreshToken), authController.refreshToken);
+router.post('/refresh', validate(AuthValidation.refreshToken), (req, res) => authController.refreshToken(req, res));
 // User Logout
-router.post('/logout', authenticate, authController.logout);
+router.post('/logout', authenticate, (req, res) => authController.logout(req, res));
 // Logout from all devices
-router.post('/logout-all', authenticate, authController.logoutAll);
+router.post('/logout-all', authenticate, (req, res) => authController.logoutAll(req, res));
 // Forgot Password
-router.post('/forgot-password', authController.forgotPassword);
+router.post('/forgot-password', (req, res) => authController.forgotPassword(req, res));
 // Reset Password
-router.post('/reset-password', authController.resetPassword);
+router.post('/reset-password', (req, res) => authController.resetPassword(req, res));
 // Admin Password Reset (Development/Debug only)
-router.post('/admin-reset-password', validate(AuthValidation.resetUserPassword), authController.adminResetPassword);
+router.post('/admin-reset-password', validate(AuthValidation.resetUserPassword), (req, res) => authController.adminResetPassword(req, res));
 // Change Password (authenticated user)
-router.post('/change-password', authenticate, authController.changePassword);
+router.post('/change-password', authenticate, (req, res) => authController.changePassword(req, res));
 // Verify token (check if user is authenticated)
 router.get('/verify', authenticate, (req, res) => {
     res.json({
@@ -45,37 +45,37 @@ router.get('/verify', authenticate, (req, res) => {
     });
 });
 // Get current user profile
-router.get('/me', authenticate, authController.getCurrentUser);
+router.get('/me', authenticate, (req, res) => authController.getCurrentUser(req, res));
 // Update current user profile
-router.put('/me', authenticate, authController.updateProfile);
+router.put('/me', authenticate, (req, res) => authController.updateProfile(req, res));
 // Delete account
-router.delete('/me', authenticate, authController.deleteAccount);
+router.delete('/me', authenticate, (req, res) => authController.deleteAccount(req, res));
 // Check email availability
-router.post('/check-email', authController.checkEmailAvailability);
+router.post('/check-email', (req, res) => authController.checkEmailAvailability(req, res));
 // Social Authentication (Google, Facebook, etc.)
-router.post('/social/google', authController.googleAuth);
-router.post('/social/facebook', authController.facebookAuth);
+router.post('/social/google', (req, res) => authController.googleAuth(req, res));
+router.post('/social/facebook', (req, res) => authController.facebookAuth(req, res));
 // Two-Factor Authentication routes
-router.post('/2fa/enable', authenticate, authController.enableTwoFactor);
-router.post('/2fa/disable', authenticate, authController.disableTwoFactor);
-router.post('/2fa/verify', authenticate, authController.verifyTwoFactor);
+router.post('/2fa/enable', authenticate, (req, res) => authController.enableTwoFactor(req, res));
+router.post('/2fa/disable', authenticate, (req, res) => authController.disableTwoFactor(req, res));
+router.post('/2fa/verify', authenticate, (req, res) => authController.verifyTwoFactor(req, res));
 // Account recovery
-router.post('/recover-account', authController.recoverAccount);
+router.post('/recover-account', (req, res) => authController.recoverAccount(req, res));
 // Get authentication status (public route with optional auth)
-router.get('/status', optionalAuth, authController.getAuthStatus);
+router.get('/status', optionalAuth, (req, res) => authController.getAuthStatus(req, res));
 // Temporary route for promoting user to admin (development only)
-router.post('/promote-to-admin', validate(AuthValidation.promoteToAdmin), authController.promoteToAdmin);
+router.post('/promote-to-admin', validate(AuthValidation.promoteToAdmin), (req, res) => authController.promoteToAdmin(req, res));
 // Temporary route for resetting user password (development only)
-router.post('/reset-user-password', validate(AuthValidation.resetUserPassword), authController.resetUserPassword);
+router.post('/reset-user-password', validate(AuthValidation.resetUserPassword), (req, res) => authController.resetUserPassword(req, res));
 // Profile Management Routes
 // Get detailed profile with role-specific data and stats
-router.get('/profile', authenticate, authController.getProfile);
+router.get('/profile', authenticate, (req, res) => authController.getProfile(req, res));
 // Update profile information
-router.put('/profile', authenticate, authController.updateProfile);
+router.put('/profile', authenticate, (req, res) => authController.updateProfile(req, res));
 // Upload profile avatar
-router.post('/profile/avatar', authenticate, upload.single('image'), authController.uploadAvatar);
+router.post('/profile/avatar', authenticate, upload.single('image'), (req, res) => authController.uploadAvatar(req, res));
 // Get profile statistics
-router.get('/profile/stats', authenticate, authController.getProfileStats);
+router.get('/profile/stats', authenticate, (req, res) => authController.getProfileStats(req, res));
 // Debug endpoint to check permissions data
 router.get('/debug-permissions/:userId', async (req, res) => {
     try {

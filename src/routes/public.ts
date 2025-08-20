@@ -40,7 +40,7 @@ router.get('/course-preview/:id', async (req, res) => {
         }
       } catch (err) {
         // Token invalid or expired, continue as public user
-        console.log('Token validation failed, continuing as public user:', err.message);
+        console.log('Token validation failed, continuing as public user:', (err as Error).message);
       }
     }
 

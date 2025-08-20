@@ -1,10 +1,10 @@
 import Stripe from 'stripe';
-import pool from '../config/database.js';
+import { db } from '../config/database.js';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { notificationService } from './NotificationService.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2024-12-18.acacia'
+  apiVersion: '2025-07-30.basil'
 });
 
 interface PaymentData {
@@ -36,7 +36,7 @@ class PaymentService {
   private async initializePaymentTables() {
     try {
       // Enhanced payment_transactions table
-      await pool.execute(`
+      await db.query(`
         CREATE TABLE IF NOT EXISTS payment_transactions (
           id INT AUTO_INCREMENT PRIMARY KEY,
           user_id INT NOT NULL,
@@ -76,7 +76,7 @@ class PaymentService {
       `);
 
       // Coupons table
-      await pool.execute(`
+      await db.query(`
         CREATE TABLE IF NOT EXISTS coupons (
           id INT AUTO_INCREMENT PRIMARY KEY,
           code VARCHAR(50) NOT NULL UNIQUE,
@@ -103,7 +103,7 @@ class PaymentService {
       `);
 
       // Coupon usage tracking
-      await pool.execute(`
+      await db.query(`
         CREATE TABLE IF NOT EXISTS coupon_usage (
           id INT AUTO_INCREMENT PRIMARY KEY,
           coupon_id INT NOT NULL,
@@ -119,7 +119,7 @@ class PaymentService {
       `);
 
       // Subscription plans
-      await pool.execute(`
+      await db.query(`
         CREATE TABLE IF NOT EXISTS subscription_plans (
           id INT AUTO_INCREMENT PRIMARY KEY,
           name VARCHAR(100) NOT NULL,
@@ -137,7 +137,7 @@ class PaymentService {
       `);
 
       // User subscriptions
-      await pool.execute(`
+      await db.query(`
         CREATE TABLE IF NOT EXISTS user_subscriptions (
           id INT AUTO_INCREMENT PRIMARY KEY,
           user_id INT NOT NULL,
@@ -165,7 +165,7 @@ class PaymentService {
   async createPaymentIntent(data: PaymentData) {
     try {
       // Get course details
-      const [courses] = await pool.execute<RowDataPacket[]>(
+      const courses = await db.query<RowDataPacket>(
         'SELECT title, price, discount_price FROM courses WHERE id = ?',
         [data.courseId]
       );
@@ -194,7 +194,7 @@ class PaymentService {
       // Create transaction record
       const transactionId = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
-      await pool.execute<ResultSetHeader>(
+      await db.query(
         `INSERT INTO payment_transactions 
          (user_id, course_id, transaction_id, stripe_payment_intent_id, amount, currency, payment_method, payment_status, description)
          VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?)`,
@@ -229,7 +229,7 @@ class PaymentService {
 
       if (paymentIntent.status === 'succeeded') {
         // Update transaction status
-        const [result] = await pool.execute<ResultSetHeader>(
+        const result = await db.insert(
           `UPDATE payment_transactions 
            SET payment_status = 'completed',
                completed_at = NOW(),
@@ -244,7 +244,7 @@ class PaymentService {
         );
 
         // Get transaction details
-        const [transactions] = await pool.execute<RowDataPacket[]>(
+        const transactions = await db.query<RowDataPacket>(
           `SELECT pt.*, c.title as course_title
            FROM payment_transactions pt
            JOIN courses c ON pt.course_id = c.id
@@ -282,7 +282,7 @@ class PaymentService {
   async processRefund(transactionId: string, amount?: number, reason?: string) {
     try {
       // Get transaction details
-      const [transactions] = await pool.execute<RowDataPacket[]>(
+      const transactions = await db.query<RowDataPacket>(
         'SELECT * FROM payment_transactions WHERE transaction_id = ?',
         [transactionId]
       );
@@ -311,7 +311,7 @@ class PaymentService {
       });
 
       // Update transaction record
-      await pool.execute(
+      await db.query(
         `UPDATE payment_transactions 
          SET payment_status = 'refunded',
              refund_amount = ?,
@@ -323,7 +323,7 @@ class PaymentService {
 
       // Remove enrollment if full refund
       if (refundAmount === transaction.amount) {
-        await pool.execute(
+        await db.query(
           'DELETE FROM enrollments WHERE user_id = ? AND course_id = ?',
           [transaction.user_id, transaction.course_id]
         );
@@ -354,7 +354,7 @@ class PaymentService {
         params.push(courseId);
       }
 
-      const [coupons] = await pool.execute<RowDataPacket[]>(query, params);
+      const coupons = await db.query<RowDataPacket>(query, params);
 
       if (coupons.length === 0) {
         return null;
@@ -376,7 +376,7 @@ class PaymentService {
       }
 
       // Get transaction details
-      const [transactions] = await pool.execute<RowDataPacket[]>(
+      const transactions = await db.query<RowDataPacket>(
         'SELECT * FROM payment_transactions WHERE transaction_id = ?',
         [transactionId]
       );
@@ -389,19 +389,23 @@ class PaymentService {
       
       // Calculate discount
       let discountAmount = 0;
-      if (coupon.discount_type === 'percentage') {
-        discountAmount = (transaction.amount * coupon.discount_value) / 100;
-        if (coupon.max_discount_amount) {
-          discountAmount = Math.min(discountAmount, coupon.max_discount_amount);
+      const couponType = (coupon as any).discount_type || (coupon as any).type || 'fixed_amount';
+      const couponValue = (coupon as any).discount_value || (coupon as any).value || 0;
+      const maxDiscount = (coupon as any).maximum_discount || (coupon as any).max_discount;
+      
+      if (couponType === 'percentage') {
+        discountAmount = (transaction.amount * couponValue) / 100;
+        if (maxDiscount) {
+          discountAmount = Math.min(discountAmount, maxDiscount);
         }
       } else {
-        discountAmount = Math.min(coupon.discount_value, transaction.amount);
+        discountAmount = Math.min(couponValue, transaction.amount);
       }
 
       const netAmount = transaction.amount - discountAmount;
 
       // Update transaction
-      await pool.execute(
+      await db.query(
         `UPDATE payment_transactions 
          SET coupon_code = ?,
              discount_amount = ?,
@@ -411,7 +415,7 @@ class PaymentService {
       );
 
       // Increment coupon usage
-      await pool.execute(
+      await db.query(
         'UPDATE coupons SET used_count = used_count + 1 WHERE id = ?',
         [coupon.id]
       );
@@ -431,7 +435,7 @@ class PaymentService {
   private async createEnrollment(userId: number, courseId: number) {
     try {
       // Check if already enrolled
-      const [existing] = await pool.execute<RowDataPacket[]>(
+      const existing = await db.query<RowDataPacket>(
         'SELECT id FROM enrollments WHERE user_id = ? AND course_id = ?',
         [userId, courseId]
       );
@@ -441,21 +445,21 @@ class PaymentService {
       }
 
       // Create enrollment
-      const [result] = await pool.execute<ResultSetHeader>(
+      const resultId = await db.insert(
         `INSERT INTO enrollments (user_id, course_id, enrolled_at, status)
          VALUES (?, ?, NOW(), 'active')`,
         [userId, courseId]
       );
 
       // Create course progress entry
-      await pool.execute(
+      await db.query(
         `INSERT INTO course_progress (user_id, course_id, enrollment_id)
          VALUES (?, ?, ?)`,
-        [userId, courseId, result.insertId]
+        [userId, courseId, resultId]
       );
 
       // Send enrollment notification
-      const [courses] = await pool.execute<RowDataPacket[]>(
+      const courses = await db.query<RowDataPacket>(
         'SELECT title FROM courses WHERE id = ?',
         [courseId]
       );
@@ -464,7 +468,7 @@ class PaymentService {
         await notificationService.notifyCourseEnrollment(userId, courseId, courses[0].title);
       }
 
-      return result.insertId;
+      return resultId;
     } catch (error) {
       console.error('Error creating enrollment:', error);
       throw error;
@@ -474,7 +478,7 @@ class PaymentService {
   private async updateCourseStats(courseId: number) {
     try {
       // Update total students count
-      await pool.execute(
+      await db.query(
         `UPDATE courses 
          SET total_students = (
            SELECT COUNT(*) FROM enrollments WHERE course_id = ?
@@ -489,7 +493,7 @@ class PaymentService {
 
   async getPaymentHistory(userId: number, limit = 10, offset = 0) {
     try {
-      const [transactions] = await pool.execute<RowDataPacket[]>(
+      const transactions = await db.query<RowDataPacket>(
         `SELECT pt.*, c.title as course_title, c.thumbnail
          FROM payment_transactions pt
          LEFT JOIN courses c ON pt.course_id = c.id
@@ -531,7 +535,7 @@ class PaymentService {
       query += ` GROUP BY DATE_FORMAT(created_at, '%Y-%m')
                  ORDER BY month DESC`;
 
-      const [stats] = await pool.execute<RowDataPacket[]>(query, params);
+      const stats = await db.query<RowDataPacket>(query, params);
       
       return stats;
     } catch (error) {

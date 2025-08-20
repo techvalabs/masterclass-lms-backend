@@ -179,7 +179,7 @@ export class AdminContentController {
             // Try to save to database if available
             if (this.db) {
               try {
-                const [result]: any = await this.db.execute(
+                const [result]: any = await this.db!.execute(
                   `INSERT INTO file_uploads (
                     user_id, original_name, file_name, file_path, file_size, mime_type,
                     file_type, entity_type, entity_id, alt_text, title, description,

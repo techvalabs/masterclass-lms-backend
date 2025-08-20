@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Database } from '@/config/database.js';
+import Database from '@/config/database.js';
 import { logger } from '@/utils/logger.js';
 import { userIds } from './users.js';
 

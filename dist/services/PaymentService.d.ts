@@ -1,4 +1,5 @@
 import Stripe from 'stripe';
+import { RowDataPacket } from 'mysql2';
 interface PaymentData {
     userId: number;
     courseId: number;
@@ -44,8 +45,8 @@ declare class PaymentService {
     }>;
     private createEnrollment;
     private updateCourseStats;
-    getPaymentHistory(userId: number, limit?: number, offset?: number): Promise<any>;
-    getRevenueStats(instructorId?: number): Promise<any>;
+    getPaymentHistory(userId: number, limit?: number, offset?: number): Promise<RowDataPacket[]>;
+    getRevenueStats(instructorId?: number): Promise<RowDataPacket[]>;
 }
 export declare const paymentService: PaymentService;
 export {};

@@ -92,10 +92,11 @@ export class AdminSettingsController {
 
       // Filter by category if requested
       const { category } = req.query;
-      if (category && settings[category as string]) {
+      const categoryKey = category as keyof typeof settings;
+      if (category && settings[categoryKey]) {
         return res.json({
           success: true,
-          data: { [category as string]: settings[category as string] }
+          data: { [categoryKey]: settings[categoryKey] }
         });
       }
 
@@ -275,7 +276,7 @@ export class AdminSettingsController {
   getSystemInfo = async (req: AdminSettingsRequest, res: Response) => {
     try {
       // Get database statistics
-      const [dbStats]: any = await this.db.execute(`
+      const [dbStats]: any = await this.db!.execute(`
         SELECT 
           (SELECT COUNT(*) FROM users) as total_users,
           (SELECT COUNT(*) FROM courses) as total_courses,
@@ -286,7 +287,7 @@ export class AdminSettingsController {
       `);
 
       // Get database size
-      const [dbSize]: any = await this.db.execute(`
+      const [dbSize]: any = await this.db!.execute(`
         SELECT 
           ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS size_mb
         FROM information_schema.tables 
@@ -294,7 +295,7 @@ export class AdminSettingsController {
       `);
 
       // Get recent backups
-      const [recentBackups]: any = await this.db.execute(`
+      const [recentBackups]: any = await this.db!.execute(`
         SELECT id, backup_name, backup_type, file_size, status, created_at
         FROM backup_logs
         ORDER BY created_at DESC
@@ -302,12 +303,12 @@ export class AdminSettingsController {
       `);
 
       // Get system settings count
-      const [settingsCount]: any = await this.db.execute(
+      const [settingsCount]: any = await this.db!.execute(
         'SELECT COUNT(*) as count FROM system_settings'
       );
 
       // Get recent activities
-      const [recentActivities]: any = await this.db.execute(`
+      const [recentActivities]: any = await this.db!.execute(`
         SELECT action, description, created_at
         FROM activity_logs
         WHERE action IN ('settings_updated', 'backup_created', 'system_maintenance')
@@ -395,7 +396,7 @@ export class AdminSettingsController {
       await fs.mkdir(backupDir, { recursive: true });
 
       // Insert backup log record
-      const [result]: any = await this.db.execute(
+      const [result]: any = await this.db!.execute(
         `INSERT INTO backup_logs (
           backup_name, backup_type, file_path, file_size, compression, status,
           started_at, created_by, created_at
@@ -451,7 +452,7 @@ export class AdminSettingsController {
         throw new ValidationError('Invalid backup ID');
       }
 
-      const [backups]: any = await this.db.execute(
+      const [backups]: any = await this.db!.execute(
         'SELECT * FROM backup_logs WHERE id = ?',
         [backupId]
       );
@@ -525,7 +526,7 @@ export class AdminSettingsController {
       const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
       // Count total records
-      const [countResult]: any = await this.db.execute(
+      const [countResult]: any = await this.db!.execute(
         `SELECT COUNT(*) as total FROM backup_logs ${whereClause}`,
         params
       );
@@ -536,7 +537,7 @@ export class AdminSettingsController {
       const totalPages = Math.ceil(total / limit);
 
       // Get backups
-      const [backups]: any = await this.db.execute(
+      const [backups]: any = await this.db!.execute(
         `SELECT 
           bl.*,
           u.name as created_by_name
@@ -568,9 +569,9 @@ export class AdminSettingsController {
           page,
           limit,
           total,
-          totalPages,
-          hasNext: page < totalPages,
-          hasPrev: page > 1
+          total_pages: totalPages,
+          has_next: page < totalPages,
+          has_prev: page > 1
         }
       });
     } catch (error) {
@@ -596,7 +597,7 @@ export class AdminSettingsController {
       }
 
       // Get backup details
-      const [backups]: any = await this.db.execute(
+      const [backups]: any = await this.db!.execute(
         'SELECT id, backup_name, file_path, status FROM backup_logs WHERE id = ?',
         [backupId]
       );
@@ -621,10 +622,10 @@ export class AdminSettingsController {
       }
 
       // Delete backup record
-      await this.db.execute('DELETE FROM backup_logs WHERE id = ?', [backupId]);
+      await this.db!.execute('DELETE FROM backup_logs WHERE id = ?', [backupId]);
 
       // Log activity
-      await this.db.execute(
+      await this.db!.execute(
         'INSERT INTO activity_logs (user_id, action, entity_type, entity_id, description, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
         [req.user.id, 'backup_deleted', 'backup', backupId, `Deleted backup: ${backup.backup_name}`]
       );
@@ -659,7 +660,7 @@ export class AdminSettingsController {
       // In a real implementation, you would clear Redis cache, file cache, etc.
       // For now, we'll just log the action
       
-      await this.db.execute(
+      await this.db!.execute(
         'INSERT INTO activity_logs (user_id, action, entity_type, description, created_at) VALUES (?, ?, ?, ?, NOW())',
         [req.user.id, 'cache_cleared', 'system', 'Application cache cleared']
       );
@@ -780,7 +781,7 @@ export class AdminSettingsController {
       metadata.endTime = new Date().toISOString();
 
       // Update backup record
-      await this.db.execute(
+      await this.db!.execute(
         `UPDATE backup_logs SET 
           file_path = ?, 
           file_size = ?, 
@@ -799,7 +800,7 @@ export class AdminSettingsController {
       );
 
       // Log activity
-      await this.db.execute(
+      await this.db!.execute(
         'INSERT INTO activity_logs (user_id, action, entity_type, entity_id, description, metadata, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())',
         [
           null, // System action
@@ -818,7 +819,7 @@ export class AdminSettingsController {
 
   private async updateBackupStatus(backupId: number, status: string, errorMessage?: string): Promise<void> {
     try {
-      await this.db.execute(
+      await this.db!.execute(
         'UPDATE backup_logs SET status = ?, error_message = ?, completed_at = NOW() WHERE id = ?',
         [status, errorMessage || null, backupId]
       );

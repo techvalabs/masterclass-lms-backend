@@ -92,7 +92,7 @@ export class AdminUsersController {
         let filteredUsers = [...realisticUsers];
         
         if (roleFilter) {
-          filteredUsers = filteredUsers.filter(u => u.role.name === roleFilter);
+          filteredUsers = filteredUsers.filter(u => u.role === roleFilter);
         }
         
         if (status !== 'all') {
@@ -100,7 +100,7 @@ export class AdminUsersController {
         }
         
         if (verified !== 'all') {
-          filteredUsers = filteredUsers.filter(u => u.emailVerified === (verified === 'true'));
+          filteredUsers = filteredUsers.filter(u => u.isVerified === (verified === 'true'));
         }
         
         if (search) {
@@ -156,8 +156,8 @@ export class AdminUsersController {
             totalPages
           },
           meta: { 
-            hasNext: page < totalPages, 
-            hasPrev: page > 1 
+            has_next: page < totalPages, 
+            has_prev: page > 1 
           },
           message: "Using realistic mock data - database not connected"
         });
@@ -225,7 +225,7 @@ export class AdminUsersController {
         ${whereClause}
       `;
 
-      const [countResult]: any = await this.db.execute(countQuery, params);
+      const [countResult]: any = await this.db!.execute(countQuery, params);
       const total = countResult[0].total;
 
       // Calculate pagination
@@ -280,7 +280,7 @@ export class AdminUsersController {
       // For MySQL LIMIT ?, ? syntax, the parameters should be offset, limit
       const queryParams = [...params, offsetNum, limitNum];
       
-      const [users]: any = await this.db.query(usersQuery, queryParams);
+      const [users]: any = await this.db!.query(usersQuery, queryParams);
 
       const response: ApiResponse = {
         success: true,
@@ -318,15 +318,13 @@ export class AdminUsersController {
               : 0
           }
         })),
-        pagination: {
+        meta: {
           page,
           limit,
           total,
-          totalPages
-        },
-        meta: {
-          hasNext: page < totalPages,
-          hasPrev: page > 1
+          total_pages: totalPages,
+          has_next: page < totalPages,
+          has_prev: page > 1
         }
       };
 
@@ -372,7 +370,7 @@ export class AdminUsersController {
               totalEnrollments: Math.floor(Math.random() * 10) + 1,
               completedCourses: Math.floor(Math.random() * 5),
               totalSpent: Math.floor(Math.random() * 1000) + 100,
-              coursesCreated: user.role.name === 'instructor' ? Math.floor(Math.random() * 5) + 1 : 0,
+              coursesCreated: user.role === 'instructor' ? Math.floor(Math.random() * 5) + 1 : 0,
               reviewsGiven: Math.floor(Math.random() * 15),
               avgRatingGiven: +(3.5 + Math.random() * 1.5).toFixed(1),
               completionRate: Math.floor(Math.random() * 100)
@@ -402,7 +400,7 @@ export class AdminUsersController {
         WHERE u.id = ?
       `;
 
-      const [userResult]: any = await this.db.execute(userQuery, [userId]);
+      const [userResult]: any = await this.db!.execute(userQuery, [userId]);
 
       if (userResult.length === 0) {
         throw new NotFoundError('User not found');
@@ -434,7 +432,7 @@ export class AdminUsersController {
         LIMIT 10
       `;
 
-      const [enrollments]: any = await this.db.execute(enrollmentsQuery, [userId]);
+      const [enrollments]: any = await this.db!.execute(enrollmentsQuery, [userId]);
 
       // Get user's payment history
       const paymentsQuery = `
@@ -455,7 +453,7 @@ export class AdminUsersController {
         LIMIT 10
       `;
 
-      const [payments]: any = await this.db.execute(paymentsQuery, [userId]);
+      const [payments]: any = await this.db!.execute(paymentsQuery, [userId]);
 
       // Get user's activity logs (if table exists)
       let activities: any[] = [];
@@ -473,7 +471,7 @@ export class AdminUsersController {
           ORDER BY al.created_at DESC
           LIMIT 20
         `;
-        const [activityResult]: any = await this.db.execute(activityQuery, [userId]);
+        const [activityResult]: any = await this.db!.execute(activityQuery, [userId]);
         activities = activityResult;
       } catch (error) {
         // Activity logs table might not exist, continue without it
@@ -978,7 +976,7 @@ export class AdminUsersController {
       }
 
       // Check if user exists
-      const [existingUser]: any = await this.db.execute(
+      const [existingUser]: any = await this.db!.execute(
         'SELECT id, name, email, role_id FROM users WHERE id = ?',
         [userId]
       );
@@ -990,7 +988,7 @@ export class AdminUsersController {
       const user = existingUser[0];
 
       // Check if role exists
-      const [role]: any = await this.db.execute(
+      const [role]: any = await this.db!.execute(
         'SELECT id, name FROM roles WHERE id = ?',
         [roleId]
       );
@@ -1004,13 +1002,13 @@ export class AdminUsersController {
       }
 
       // Update user role
-      await this.db.execute(
+      await this.db!.execute(
         'UPDATE users SET role_id = ?, updated_at = NOW() WHERE id = ?',
         [roleId, userId]
       );
 
       // Log activity
-      await this.db.execute(
+      await this.db!.execute(
         'INSERT INTO activity_logs (user_id, action, entity_type, entity_id, description, metadata, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())',
         [
           req.user.id,
@@ -1072,7 +1070,7 @@ export class AdminUsersController {
       }
 
       // Check if user exists
-      const [existingUser]: any = await this.db.execute(
+      const [existingUser]: any = await this.db!.execute(
         'SELECT id, name, email, is_active FROM users WHERE id = ?',
         [userId]
       );
@@ -1085,21 +1083,21 @@ export class AdminUsersController {
       const newStatus = !user.is_active;
 
       // Update user status
-      await this.db.execute(
+      await this.db!.execute(
         'UPDATE users SET is_active = ?, updated_at = NOW() WHERE id = ?',
         [newStatus, userId]
       );
 
       // If deactivating, invalidate all user sessions
       if (!newStatus) {
-        await this.db.execute(
+        await this.db!.execute(
           'UPDATE user_sessions SET is_active = 0 WHERE user_id = ?',
           [userId]
         );
       }
 
       // Log activity
-      await this.db.execute(
+      await this.db!.execute(
         'INSERT INTO activity_logs (user_id, action, entity_type, entity_id, description, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
         [
           req.user.id,
@@ -1176,7 +1174,7 @@ export class AdminUsersController {
           throw new ValidationError('Invalid recipients type');
       }
 
-      const [users]: any = await this.db.execute(emailQuery, emailParams);
+      const [users]: any = await this.db!.execute(emailQuery, emailParams);
 
       if (users.length === 0) {
         throw new ValidationError('No eligible users found for the specified criteria');
@@ -1194,7 +1192,7 @@ export class AdminUsersController {
       };
 
       // Log the bulk email activity
-      await this.db.execute(
+      await this.db!.execute(
         'INSERT INTO activity_logs (user_id, action, entity_type, description, metadata, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
         [
           req.user.id,
@@ -1255,7 +1253,7 @@ export class AdminUsersController {
 
       // Validate all user IDs exist
       const placeholders = userIds.map(() => '?').join(',');
-      const [existingUsers]: any = await this.db.execute(
+      const [existingUsers]: any = await this.db!.execute(
         `SELECT id, name, email FROM users WHERE id IN (${placeholders})`,
         userIds
       );
@@ -1279,7 +1277,7 @@ export class AdminUsersController {
           query = `UPDATE users SET is_active = 0, updated_at = NOW() WHERE id IN (${placeholders})`;
           queryParams = userIds;
           // Also invalidate sessions for deactivated users
-          await this.db.execute(
+          await this.db!.execute(
             `UPDATE user_sessions SET is_active = 0 WHERE user_id IN (${placeholders})`,
             userIds
           );
@@ -1298,7 +1296,7 @@ export class AdminUsersController {
           }
           
           // Verify role exists
-          const [role]: any = await this.db.execute(
+          const [role]: any = await this.db!.execute(
             'SELECT id, name FROM roles WHERE id = ?',
             [roleId]
           );
@@ -1315,7 +1313,7 @@ export class AdminUsersController {
         case 'delete':
           // This is a complex operation that requires careful handling
           // Check if any users are instructors with courses
-          const [instructorCheck]: any = await this.db.execute(
+          const [instructorCheck]: any = await this.db!.execute(
             `SELECT u.id, u.name, COUNT(c.id) as course_count 
              FROM users u 
              LEFT JOIN instructors i ON u.id = i.user_id 
@@ -1331,39 +1329,39 @@ export class AdminUsersController {
           }
 
           // Start transaction for bulk delete
-          await this.db.execute('START TRANSACTION');
+          await this.db!.execute('START TRANSACTION');
 
           try {
             // Delete related data for all users
-            await this.db.execute(`DELETE FROM user_sessions WHERE user_id IN (${placeholders})`, userIds);
-            await this.db.execute(`DELETE FROM notifications WHERE user_id IN (${placeholders})`, userIds);
-            await this.db.execute(`DELETE FROM course_reviews WHERE user_id IN (${placeholders})`, userIds);
-            await this.db.execute(`DELETE FROM quiz_attempts WHERE user_id IN (${placeholders})`, userIds);
-            await this.db.execute(`DELETE FROM progress WHERE user_id IN (${placeholders})`, userIds);
-            await this.db.execute(`DELETE FROM certificates WHERE user_id IN (${placeholders})`, userIds);
-            await this.db.execute(`DELETE FROM enrollments WHERE user_id IN (${placeholders})`, userIds);
-            await this.db.execute(`DELETE FROM payment_transactions WHERE user_id IN (${placeholders})`, userIds);
-            await this.db.execute(`DELETE FROM coupon_usage WHERE user_id IN (${placeholders})`, userIds);
-            await this.db.execute(`DELETE FROM file_uploads WHERE user_id IN (${placeholders})`, userIds);
-            await this.db.execute(`UPDATE activity_logs SET user_id = NULL WHERE user_id IN (${placeholders})`, userIds);
-            await this.db.execute(`DELETE FROM users WHERE id IN (${placeholders})`, userIds);
+            await this.db!.execute(`DELETE FROM user_sessions WHERE user_id IN (${placeholders})`, userIds);
+            await this.db!.execute(`DELETE FROM notifications WHERE user_id IN (${placeholders})`, userIds);
+            await this.db!.execute(`DELETE FROM course_reviews WHERE user_id IN (${placeholders})`, userIds);
+            await this.db!.execute(`DELETE FROM quiz_attempts WHERE user_id IN (${placeholders})`, userIds);
+            await this.db!.execute(`DELETE FROM progress WHERE user_id IN (${placeholders})`, userIds);
+            await this.db!.execute(`DELETE FROM certificates WHERE user_id IN (${placeholders})`, userIds);
+            await this.db!.execute(`DELETE FROM enrollments WHERE user_id IN (${placeholders})`, userIds);
+            await this.db!.execute(`DELETE FROM payment_transactions WHERE user_id IN (${placeholders})`, userIds);
+            await this.db!.execute(`DELETE FROM coupon_usage WHERE user_id IN (${placeholders})`, userIds);
+            await this.db!.execute(`DELETE FROM file_uploads WHERE user_id IN (${placeholders})`, userIds);
+            await this.db!.execute(`UPDATE activity_logs SET user_id = NULL WHERE user_id IN (${placeholders})`, userIds);
+            await this.db!.execute(`DELETE FROM users WHERE id IN (${placeholders})`, userIds);
 
-            await this.db.execute('COMMIT');
+            await this.db!.execute('COMMIT');
             successMessage = `${userIds.length} users deleted successfully`;
           } catch (error) {
-            await this.db.execute('ROLLBACK');
+            await this.db!.execute('ROLLBACK');
             throw error;
           }
           break;
       }
 
       if (query && action !== 'delete') {
-        await this.db.execute(query, queryParams);
+        await this.db!.execute(query, queryParams);
       }
 
       // Log bulk activity
       const userNames = existingUsers.map((u: any) => u.name || u.email).join(', ');
-      await this.db.execute(
+      await this.db!.execute(
         'INSERT INTO activity_logs (user_id, action, entity_type, description, metadata, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
         [
           req.user.id,
@@ -1430,7 +1428,7 @@ export class AdminUsersController {
       }
 
       // Get user statistics
-      const [stats]: any = await this.db.execute(`
+      const [stats]: any = await this.db!.execute(`
         SELECT 
           (SELECT COUNT(*) FROM enrollments WHERE user_id = ? AND is_active = 1) as courses_enrolled,
           (SELECT COUNT(*) FROM enrollments WHERE user_id = ? AND completed_at IS NOT NULL) as courses_completed,
@@ -1532,7 +1530,7 @@ export class AdminUsersController {
       const activities: any[] = [];
 
       // Get recent enrollments
-      const [enrollments]: any = await this.db.execute(`
+      const [enrollments]: any = await this.db!.execute(`
         SELECT 
           'enrollment' as type,
           CONCAT('Enrolled in ', c.title) as description,
@@ -1546,7 +1544,7 @@ export class AdminUsersController {
       `, [userId]);
 
       // Get recent course completions
-      const [completions]: any = await this.db.execute(`
+      const [completions]: any = await this.db!.execute(`
         SELECT 
           'completion' as type,
           CONCAT('Completed ', c.title) as description,
@@ -1560,7 +1558,7 @@ export class AdminUsersController {
       `, [userId]);
 
       // Get recent reviews
-      const [reviews]: any = await this.db.execute(`
+      const [reviews]: any = await this.db!.execute(`
         SELECT 
           'review' as type,
           CONCAT('Reviewed ', c.title, ' (', cr.rating, ' stars)') as description,
@@ -1575,7 +1573,7 @@ export class AdminUsersController {
       `, [userId]);
 
       // Get recent purchases
-      const [purchases]: any = await this.db.execute(`
+      const [purchases]: any = await this.db!.execute(`
         SELECT 
           'purchase' as type,
           CONCAT('Purchased ', c.title, ' for $', pt.amount) as description,
@@ -1630,7 +1628,7 @@ export class AdminUsersController {
       }
 
       // Get user details
-      const [users]: any = await this.db.execute(
+      const [users]: any = await this.db!.execute(
         'SELECT id, name, email FROM users WHERE id = ?',
         [userId]
       );
@@ -1648,7 +1646,7 @@ export class AdminUsersController {
       // Log the email in the database (optional - only if table exists)
       if (await this.checkDatabaseConnection()) {
         try {
-          await this.db.execute(`
+          await this.db!.execute(`
             INSERT INTO email_logs (user_id, from_user_id, subject, message, sent_at)
             VALUES (?, ?, ?, ?, NOW())
           `, [userId, req.user.id, subject, message]);
@@ -1722,7 +1720,7 @@ export class AdminUsersController {
       }
 
       // Check if email already exists
-      const [existingUsers] = await this.db.execute(
+      const [existingUsers] = await this.db!.execute(
         'SELECT id FROM users WHERE email = ?',
         [email]
       );
@@ -1732,7 +1730,7 @@ export class AdminUsersController {
       }
 
       // Get role ID
-      const [roles] = await this.db.execute(
+      const [roles] = await this.db!.execute(
         'SELECT id FROM roles WHERE name = ?',
         [role]
       );
@@ -1747,7 +1745,7 @@ export class AdminUsersController {
       const passwordHash = await PasswordUtils.hash(password);
 
       // Insert new user
-      const [result] = await this.db.execute(
+      const [result] = await this.db!.execute(
         `INSERT INTO users 
         (name, email, password_hash, role_id, phone, location, bio, is_active, email_verified, email_verified_at, created_at, updated_at) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
@@ -1769,7 +1767,7 @@ export class AdminUsersController {
 
       // If role is instructor, create instructor record
       if (role === 'instructor') {
-        await this.db.execute(
+        await this.db!.execute(
           `INSERT INTO instructors 
           (user_id, experience, qualifications, specialties, status, approved_at, created_at, updated_at)
           VALUES (?, '', '[]', '[]', 'pending', NULL, NOW(), NOW())`,
@@ -1778,7 +1776,7 @@ export class AdminUsersController {
       }
 
       // Fetch the created user
-      const [users] = await this.db.execute(
+      const [users] = await this.db!.execute(
         `SELECT 
           u.id,
           u.name,

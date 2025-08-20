@@ -48,15 +48,12 @@ router.get('/detailed', async (req, res) => {
     try {
         await db.query('SELECT 1 as test');
         healthStatus.services.database = {
-            status: 'healthy',
-            connected: true,
+            status: 'healthy'
         };
     }
     catch (error) {
         healthStatus.services.database = {
-            status: 'unhealthy',
-            connected: false,
-            error: error instanceof Error ? error.message : 'Unknown error',
+            status: 'unhealthy'
         };
         healthStatus.success = false;
         healthStatus.status = 'degraded';

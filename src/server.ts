@@ -180,7 +180,7 @@ class Server {
       
       // Log response when finished
       res.on('finish', () => {
-        const duration = Date.now() - req.startTime;
+        const duration = Date.now() - (req as any).startTime;
         if (process.env.NODE_ENV === 'development') {
           console.log(`${req.method} ${req.url} - ${res.statusCode} (${duration}ms)`);
         }

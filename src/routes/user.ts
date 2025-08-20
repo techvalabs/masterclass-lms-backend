@@ -67,27 +67,27 @@ router.get('/settings', authenticate, async (req: any, res) => {
         },
         settings: {
           notifications: {
-            email: notifications.email !== false,
-            push: notifications.push !== false,
-            sms: notifications.sms || false,
-            courseUpdates: notifications.courseUpdates !== false,
-            promotionalEmails: notifications.promotionalEmails !== false,
-            forumNotifications: notifications.forumNotifications !== false,
-            assignmentReminders: notifications.assignmentReminders !== false,
+            email: (notifications as any)?.email !== false,
+            push: (notifications as any)?.push !== false,
+            sms: (notifications as any)?.sms || false,
+            courseUpdates: (notifications as any)?.courseUpdates !== false,
+            promotionalEmails: (notifications as any)?.promotionalEmails !== false,
+            forumNotifications: (notifications as any)?.forumNotifications !== false,
+            assignmentReminders: (notifications as any)?.assignmentReminders !== false,
             ...notifications
           },
           privacy: {
-            profileVisibility: privacy.profileVisibility || 'public',
-            showEmail: privacy.showEmail || false,
-            showPhone: privacy.showPhone || false,
-            allowMessages: privacy.allowMessages !== false,
+            profileVisibility: (privacy as any)?.profileVisibility || 'public',
+            showEmail: (privacy as any)?.showEmail || false,
+            showPhone: (privacy as any)?.showPhone || false,
+            allowMessages: (privacy as any)?.allowMessages !== false,
             ...privacy
           },
           appearance: {
-            theme: appearance.theme || 'light',
-            language: appearance.language || 'en',
-            timezone: appearance.timezone || 'UTC',
-            dateFormat: appearance.dateFormat || 'MM/DD/YYYY',
+            theme: (appearance as any)?.theme || 'light',
+            language: (appearance as any)?.language || 'en',
+            timezone: (appearance as any)?.timezone || 'UTC',
+            dateFormat: (appearance as any)?.dateFormat || 'MM/DD/YYYY',
             ...appearance
           },
           security: {

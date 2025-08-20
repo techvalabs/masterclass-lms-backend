@@ -44,7 +44,7 @@ export class AdminAnalyticsController {
         return globalDb;
       }
     } catch (e) {
-      console.log('⚠️ Global database not available:', e.message);
+      console.log('⚠️ Global database not available:', (e as Error).message);
     }
     
     if (!this.db) {
@@ -63,7 +63,7 @@ export class AdminAnalyticsController {
       const { period = 'month' } = req.query as AnalyticsFilters;
 
       // Calculate date range based on period
-      const dateRange = this.getDateRange(period, req.query.startDate, req.query.endDate);
+      const dateRange = this.getDateRange(period, req.query.startDate as string | undefined, req.query.endDate as string | undefined);
       const previousDateRange = this.getPreviousDateRange(period, dateRange.startDate, dateRange.endDate);
 
       // Get current period stats
@@ -156,7 +156,7 @@ export class AdminAnalyticsController {
   getRevenue = async (req: AdminAnalyticsRequest, res: Response) => {
     try {
       const { period = 'month', granularity = 'day' } = req.query as AnalyticsFilters;
-      const dateRange = this.getDateRange(period, req.query.startDate, req.query.endDate);
+      const dateRange = this.getDateRange(period, req.query.startDate as string | undefined, req.query.endDate as string | undefined);
 
       // Get revenue over time
       const revenueOverTime = await this.getRevenueOverTime(
@@ -193,7 +193,7 @@ export class AdminAnalyticsController {
         success: true,
         data: {
           summary: {
-            totalRevenue: revenueOverTime.reduce((sum, item) => sum + item.revenue, 0),
+            totalRevenue: revenueOverTime.reduce((sum: number, item: any) => sum + item.revenue, 0),
             totalTransactions: transactionAnalytics.totalTransactions,
             averageOrderValue: transactionAnalytics.averageOrderValue,
             totalRefunds: refundAnalytics.totalRefunds,
@@ -256,7 +256,7 @@ export class AdminAnalyticsController {
       }
       
       const { period = 'month', granularity = 'day' } = req.query as AnalyticsFilters;
-      const dateRange = this.getDateRange(period, req.query.startDate, req.query.endDate);
+      const dateRange = this.getDateRange(period, req.query.startDate as string | undefined, req.query.endDate as string | undefined);
 
       // Get user registrations over time
       const userRegistrations = await this.getUserRegistrationsOverTime(
@@ -307,7 +307,7 @@ export class AdminAnalyticsController {
   getCourses = async (req: AdminAnalyticsRequest, res: Response) => {
     try {
       const { period = 'month' } = req.query as AnalyticsFilters;
-      const dateRange = this.getDateRange(period, req.query.startDate, req.query.endDate);
+      const dateRange = this.getDateRange(period, req.query.startDate as string | undefined, req.query.endDate as string | undefined);
 
       // Get course performance metrics
       const coursePerformance = await this.getCoursePerformance(dateRange.startDate, dateRange.endDate);
@@ -372,7 +372,7 @@ export class AdminAnalyticsController {
         format?: 'json' | 'csv';
       };
 
-      const dateRange = this.getDateRange(period, req.query.startDate, req.query.endDate);
+      const dateRange = this.getDateRange(period, req.query.startDate as string | undefined, req.query.endDate as string | undefined);
 
       let data: any;
 

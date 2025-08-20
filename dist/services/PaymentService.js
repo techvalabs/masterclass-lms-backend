@@ -1,8 +1,8 @@
 import Stripe from 'stripe';
-import pool from '../config/database.js';
+import { db } from '../config/database.js';
 import { notificationService } from './NotificationService.js';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-    apiVersion: '2024-12-18.acacia'
+    apiVersion: '2025-07-30.basil'
 });
 class PaymentService {
     constructor() {
@@ -11,7 +11,7 @@ class PaymentService {
     async initializePaymentTables() {
         try {
             // Enhanced payment_transactions table
-            await pool.execute(`
+            await db.query(`
         CREATE TABLE IF NOT EXISTS payment_transactions (
           id INT AUTO_INCREMENT PRIMARY KEY,
           user_id INT NOT NULL,
@@ -50,7 +50,7 @@ class PaymentService {
         )
       `);
             // Coupons table
-            await pool.execute(`
+            await db.query(`
         CREATE TABLE IF NOT EXISTS coupons (
           id INT AUTO_INCREMENT PRIMARY KEY,
           code VARCHAR(50) NOT NULL UNIQUE,
@@ -76,7 +76,7 @@ class PaymentService {
         )
       `);
             // Coupon usage tracking
-            await pool.execute(`
+            await db.query(`
         CREATE TABLE IF NOT EXISTS coupon_usage (
           id INT AUTO_INCREMENT PRIMARY KEY,
           coupon_id INT NOT NULL,
@@ -91,7 +91,7 @@ class PaymentService {
         )
       `);
             // Subscription plans
-            await pool.execute(`
+            await db.query(`
         CREATE TABLE IF NOT EXISTS subscription_plans (
           id INT AUTO_INCREMENT PRIMARY KEY,
           name VARCHAR(100) NOT NULL,
@@ -108,7 +108,7 @@ class PaymentService {
         )
       `);
             // User subscriptions
-            await pool.execute(`
+            await db.query(`
         CREATE TABLE IF NOT EXISTS user_subscriptions (
           id INT AUTO_INCREMENT PRIMARY KEY,
           user_id INT NOT NULL,
@@ -135,7 +135,7 @@ class PaymentService {
     async createPaymentIntent(data) {
         try {
             // Get course details
-            const [courses] = await pool.execute('SELECT title, price, discount_price FROM courses WHERE id = ?', [data.courseId]);
+            const courses = await db.query('SELECT title, price, discount_price FROM courses WHERE id = ?', [data.courseId]);
             if (courses.length === 0) {
                 throw new Error('Course not found');
             }
@@ -156,7 +156,7 @@ class PaymentService {
             });
             // Create transaction record
             const transactionId = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-            await pool.execute(`INSERT INTO payment_transactions 
+            await db.query(`INSERT INTO payment_transactions 
          (user_id, course_id, transaction_id, stripe_payment_intent_id, amount, currency, payment_method, payment_status, description)
          VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?)`, [
                 data.userId,
@@ -186,7 +186,7 @@ class PaymentService {
             const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
             if (paymentIntent.status === 'succeeded') {
                 // Update transaction status
-                const [result] = await pool.execute(`UPDATE payment_transactions 
+                const result = await db.insert(`UPDATE payment_transactions 
            SET payment_status = 'completed',
                completed_at = NOW(),
                stripe_charge_id = ?,
@@ -197,7 +197,7 @@ class PaymentService {
                     paymentIntentId
                 ]);
                 // Get transaction details
-                const [transactions] = await pool.execute(`SELECT pt.*, c.title as course_title
+                const transactions = await db.query(`SELECT pt.*, c.title as course_title
            FROM payment_transactions pt
            JOIN courses c ON pt.course_id = c.id
            WHERE pt.stripe_payment_intent_id = ?`, [paymentIntentId]);
@@ -224,7 +224,7 @@ class PaymentService {
     async processRefund(transactionId, amount, reason) {
         try {
             // Get transaction details
-            const [transactions] = await pool.execute('SELECT * FROM payment_transactions WHERE transaction_id = ?', [transactionId]);
+            const transactions = await db.query('SELECT * FROM payment_transactions WHERE transaction_id = ?', [transactionId]);
             if (transactions.length === 0) {
                 throw new Error('Transaction not found');
             }
@@ -244,7 +244,7 @@ class PaymentService {
                 }
             });
             // Update transaction record
-            await pool.execute(`UPDATE payment_transactions 
+            await db.query(`UPDATE payment_transactions 
          SET payment_status = 'refunded',
              refund_amount = ?,
              refund_reason = ?,
@@ -252,7 +252,7 @@ class PaymentService {
          WHERE transaction_id = ?`, [refundAmount, reason || 'Customer requested', transactionId]);
             // Remove enrollment if full refund
             if (refundAmount === transaction.amount) {
-                await pool.execute('DELETE FROM enrollments WHERE user_id = ? AND course_id = ?', [transaction.user_id, transaction.course_id]);
+                await db.query('DELETE FROM enrollments WHERE user_id = ? AND course_id = ?', [transaction.user_id, transaction.course_id]);
             }
             return { success: true, refund };
         }
@@ -276,7 +276,7 @@ class PaymentService {
                 query += ' AND (course_id = ? OR course_id IS NULL)';
                 params.push(courseId);
             }
-            const [coupons] = await pool.execute(query, params);
+            const coupons = await db.query(query, params);
             if (coupons.length === 0) {
                 return null;
             }
@@ -294,31 +294,34 @@ class PaymentService {
                 throw new Error('Invalid or expired coupon');
             }
             // Get transaction details
-            const [transactions] = await pool.execute('SELECT * FROM payment_transactions WHERE transaction_id = ?', [transactionId]);
+            const transactions = await db.query('SELECT * FROM payment_transactions WHERE transaction_id = ?', [transactionId]);
             if (transactions.length === 0) {
                 throw new Error('Transaction not found');
             }
             const transaction = transactions[0];
             // Calculate discount
             let discountAmount = 0;
-            if (coupon.discount_type === 'percentage') {
-                discountAmount = (transaction.amount * coupon.discount_value) / 100;
-                if (coupon.max_discount_amount) {
-                    discountAmount = Math.min(discountAmount, coupon.max_discount_amount);
+            const couponType = coupon.discount_type || coupon.type || 'fixed_amount';
+            const couponValue = coupon.discount_value || coupon.value || 0;
+            const maxDiscount = coupon.maximum_discount || coupon.max_discount;
+            if (couponType === 'percentage') {
+                discountAmount = (transaction.amount * couponValue) / 100;
+                if (maxDiscount) {
+                    discountAmount = Math.min(discountAmount, maxDiscount);
                 }
             }
             else {
-                discountAmount = Math.min(coupon.discount_value, transaction.amount);
+                discountAmount = Math.min(couponValue, transaction.amount);
             }
             const netAmount = transaction.amount - discountAmount;
             // Update transaction
-            await pool.execute(`UPDATE payment_transactions 
+            await db.query(`UPDATE payment_transactions 
          SET coupon_code = ?,
              discount_amount = ?,
              net_amount = ?
          WHERE transaction_id = ?`, [couponCode, discountAmount, netAmount, transactionId]);
             // Increment coupon usage
-            await pool.execute('UPDATE coupons SET used_count = used_count + 1 WHERE id = ?', [coupon.id]);
+            await db.query('UPDATE coupons SET used_count = used_count + 1 WHERE id = ?', [coupon.id]);
             return {
                 success: true,
                 discountAmount,
@@ -334,22 +337,22 @@ class PaymentService {
     async createEnrollment(userId, courseId) {
         try {
             // Check if already enrolled
-            const [existing] = await pool.execute('SELECT id FROM enrollments WHERE user_id = ? AND course_id = ?', [userId, courseId]);
+            const existing = await db.query('SELECT id FROM enrollments WHERE user_id = ? AND course_id = ?', [userId, courseId]);
             if (existing.length > 0) {
                 return existing[0].id;
             }
             // Create enrollment
-            const [result] = await pool.execute(`INSERT INTO enrollments (user_id, course_id, enrolled_at, status)
+            const resultId = await db.insert(`INSERT INTO enrollments (user_id, course_id, enrolled_at, status)
          VALUES (?, ?, NOW(), 'active')`, [userId, courseId]);
             // Create course progress entry
-            await pool.execute(`INSERT INTO course_progress (user_id, course_id, enrollment_id)
-         VALUES (?, ?, ?)`, [userId, courseId, result.insertId]);
+            await db.query(`INSERT INTO course_progress (user_id, course_id, enrollment_id)
+         VALUES (?, ?, ?)`, [userId, courseId, resultId]);
             // Send enrollment notification
-            const [courses] = await pool.execute('SELECT title FROM courses WHERE id = ?', [courseId]);
+            const courses = await db.query('SELECT title FROM courses WHERE id = ?', [courseId]);
             if (courses.length > 0) {
                 await notificationService.notifyCourseEnrollment(userId, courseId, courses[0].title);
             }
-            return result.insertId;
+            return resultId;
         }
         catch (error) {
             console.error('Error creating enrollment:', error);
@@ -359,7 +362,7 @@ class PaymentService {
     async updateCourseStats(courseId) {
         try {
             // Update total students count
-            await pool.execute(`UPDATE courses 
+            await db.query(`UPDATE courses 
          SET total_students = (
            SELECT COUNT(*) FROM enrollments WHERE course_id = ?
          )
@@ -371,7 +374,7 @@ class PaymentService {
     }
     async getPaymentHistory(userId, limit = 10, offset = 0) {
         try {
-            const [transactions] = await pool.execute(`SELECT pt.*, c.title as course_title, c.thumbnail
+            const transactions = await db.query(`SELECT pt.*, c.title as course_title, c.thumbnail
          FROM payment_transactions pt
          LEFT JOIN courses c ON pt.course_id = c.id
          WHERE pt.user_id = ?
@@ -405,7 +408,7 @@ class PaymentService {
             }
             query += ` GROUP BY DATE_FORMAT(created_at, '%Y-%m')
                  ORDER BY month DESC`;
-            const [stats] = await pool.execute(query, params);
+            const stats = await db.query(query, params);
             return stats;
         }
         catch (error) {

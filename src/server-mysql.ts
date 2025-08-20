@@ -39,7 +39,7 @@ const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your_super_secret_
 const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
 
 // Database connection pool
-let db: mysql.Pool;
+let db: mysql.Pool | null = null;
 let isDbConnected = false;
 
 // Database availability checker
@@ -98,7 +98,7 @@ async function initializeDatabase(retryCount = 0) {
     isDbConnected = true;
 
     // Check if tables exist
-    const [tables] = await db.execute("SHOW TABLES LIKE 'users'");
+    const [tables] = await db!.execute("SHOW TABLES LIKE 'users'");
     if ((tables as any[]).length === 0) {
       console.log('⚠️  WARNING: Users table not found. Please run:');
       console.log('   npm run db:create');
@@ -165,13 +165,13 @@ function generateTokens(userId: number, email: string, role: string) {
   const accessToken = jwt.sign(
     { userId, email, role, type: 'access' },
     JWT_SECRET,
-    { expiresIn: JWT_EXPIRES_IN }
+    { expiresIn: JWT_EXPIRES_IN } as jwt.SignOptions
   );
 
   const refreshToken = jwt.sign(
     { userId, email, role, type: 'refresh' },
     JWT_REFRESH_SECRET,
-    { expiresIn: JWT_REFRESH_EXPIRES_IN }
+    { expiresIn: JWT_REFRESH_EXPIRES_IN } as jwt.SignOptions
   );
 
   return { accessToken, refreshToken };
@@ -206,7 +206,7 @@ function authenticateToken(req: any, res: any, next: any) {
 // Debug route to check user roles
 app.get('/api/debug/users', async (req, res) => {
   try {
-    const [users]: any = await db.execute(
+    const [users]: any = await db!.execute(
       `SELECT u.id, u.name, u.email, u.role_id,
               r.name as role_name
        FROM users u 
@@ -214,7 +214,7 @@ app.get('/api/debug/users', async (req, res) => {
        ORDER BY u.created_at DESC`
     );
     
-    const [roles]: any = await db.execute('SELECT * FROM roles');
+    const [roles]: any = await db!.execute('SELECT * FROM roles');
     
     res.json({
       success: true,
@@ -240,11 +240,11 @@ app.get('/api/health', async (req, res) => {
   if (checkDatabaseConnection()) {
     const result = await safeDbOperation(
       async () => {
-        const [testResult] = await db.execute('SELECT 1 as test');
+        const [testResult] = await db!.execute('SELECT 1 as test');
         dbStatus = 'connected';
         
         // Check if users table exists
-        const [tables] = await db.execute("SHOW TABLES LIKE 'users'");
+        const [tables] = await db!.execute("SHOW TABLES LIKE 'users'");
         tableStatus = (tables as any[]).length > 0 ? 'ready' : 'missing';
         return true;
       },
@@ -277,7 +277,7 @@ app.get('/api/health', async (req, res) => {
 // Get current user
 app.get('/api/auth/me', authenticateToken, async (req: any, res) => {
   try {
-    const [users]: any = await db.execute(
+    const [users]: any = await db!.execute(
       `SELECT u.id, u.name, u.email, 
               COALESCE(r.name, 'student') as role_name, u.avatar, u.created_at 
        FROM users u 
@@ -321,7 +321,7 @@ app.get('/api/auth/me', authenticateToken, async (req: any, res) => {
 // List all users (for testing)
 app.get('/api/users', authenticateToken, async (req: any, res) => {
   try {
-    const [users]: any = await db.execute(
+    const [users]: any = await db!.execute(
       `SELECT u.id, u.name, u.email, 
               COALESCE(r.name, 'student') as role_name, u.created_at, u.is_active
        FROM users u 
@@ -357,7 +357,7 @@ app.get('/api/users', authenticateToken, async (req: any, res) => {
 // Courses endpoint with MySQL
 app.get('/api/courses', async (req, res) => {
   try {
-    const [courses]: any = await db.execute(`
+    const [courses]: any = await db!.execute(`
       SELECT 
         c.id,
         c.title,
@@ -436,7 +436,7 @@ app.get('/api/courses/featured', async (req, res) => {
 
   const courses = await safeDbOperation(
     async () => {
-      const [results]: any = await db.execute(`
+      const [results]: any = await db!.execute(`
         SELECT 
           c.id,
           c.title,
@@ -481,7 +481,7 @@ app.get('/api/courses/featured', async (req, res) => {
 // Categories endpoint
 app.get('/api/courses/categories', async (req, res) => {
   try {
-    const [categories]: any = await db.execute(
+    const [categories]: any = await db!.execute(
       'SELECT name FROM categories WHERE is_active = 1 ORDER BY name'
     );
 

@@ -171,7 +171,7 @@ export declare const validateUuidParam: (paramName: string) => (req: any, res: a
 export declare const validatePagination: (req: any, res: any, next: any) => void;
 export declare const courseSchemas: {
     browse: Joi.ObjectSchema<any>;
-    search: any;
+    search: Joi.ObjectSchema<any>;
     create: Joi.ObjectSchema<any>;
     update: Joi.ObjectSchema<any>;
 };
@@ -326,7 +326,7 @@ declare const _default: {
     validatePagination: (req: any, res: any, next: any) => void;
     courseSchemas: {
         browse: Joi.ObjectSchema<any>;
-        search: any;
+        search: Joi.ObjectSchema<any>;
         create: Joi.ObjectSchema<any>;
         update: Joi.ObjectSchema<any>;
     };

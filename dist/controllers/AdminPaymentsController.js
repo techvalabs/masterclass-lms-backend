@@ -13,6 +13,7 @@ export class AdminPaymentsController {
      */
     getTransactions = async (req, res) => {
         try {
+            const { page = 1, limit = 20, sort = 'created_at', order = 'desc', status, paymentMethod, dateFrom, dateTo, amountMin, amountMax, search } = req.query;
             if (!this.checkDatabaseConnection()) {
                 // Import realistic data dynamically
                 const { realisticTransactions } = await import('../data/realistic-data.js');
@@ -26,8 +27,8 @@ export class AdminPaymentsController {
                 }
                 if (search) {
                     const searchLower = search.toLowerCase();
-                    filteredTransactions = filteredTransactions.filter(t => t.user.name.toLowerCase().includes(searchLower) ||
-                        t.user.email.toLowerCase().includes(searchLower) ||
+                    filteredTransactions = filteredTransactions.filter(t => t.user?.name?.toLowerCase().includes(searchLower) ||
+                        t.user?.email?.toLowerCase().includes(searchLower) ||
                         t.transactionId.toLowerCase().includes(searchLower) ||
                         t.orderId.toLowerCase().includes(searchLower));
                 }
@@ -73,14 +74,13 @@ export class AdminPaymentsController {
                         page: Number(page),
                         limit: Number(limit),
                         total,
-                        totalPages,
-                        hasNext: page < totalPages,
-                        hasPrev: page > 1
+                        total_pages: totalPages,
+                        has_next: page < totalPages,
+                        has_prev: page > 1
                     },
                     message: "Using realistic mock data - database not connected"
                 });
             }
-            const { page = 1, limit = 20, sort = 'created_at', order = 'desc', status, paymentMethod, dateFrom, dateTo, amountMin, amountMax, search } = req.query;
             // Build WHERE clause
             const conditions = [];
             const params = [];
@@ -202,9 +202,9 @@ export class AdminPaymentsController {
                     page,
                     limit,
                     total,
-                    totalPages,
-                    hasNext: page < totalPages,
-                    hasPrev: page > 1
+                    total_pages: totalPages,
+                    has_next: page < totalPages,
+                    has_prev: page > 1
                 }
             };
             res.json(response);
@@ -224,9 +224,11 @@ export class AdminPaymentsController {
      */
     getRefunds = async (req, res) => {
         try {
+            const { page = 1, limit = 20, sort = 'created_at', order = 'desc', status, reason, dateFrom, dateTo, search } = req.query;
             if (!this.checkDatabaseConnection()) {
                 // Import realistic data dynamically
-                const { realisticRefunds } = await import('../data/realistic-data.js');
+                const data = await import('../data/realistic-data.js');
+                const realisticRefunds = data.realisticRefunds || [];
                 // Apply filters to mock data
                 let filteredRefunds = [...realisticRefunds];
                 if (status) {
@@ -277,14 +279,13 @@ export class AdminPaymentsController {
                         page: Number(page),
                         limit: Number(limit),
                         total,
-                        totalPages,
-                        hasNext: page < totalPages,
-                        hasPrev: page > 1
+                        total_pages: totalPages,
+                        has_next: page < totalPages,
+                        has_prev: page > 1
                     },
                     message: "Using realistic mock data - database not connected"
                 });
             }
-            const { page = 1, limit = 20, sort = 'created_at', order = 'desc', status, reason, dateFrom, dateTo, search } = req.query;
             // Build WHERE clause
             const conditions = [];
             const params = [];
@@ -385,9 +386,9 @@ export class AdminPaymentsController {
                     page,
                     limit,
                     total,
-                    totalPages,
-                    hasNext: page < totalPages,
-                    hasPrev: page > 1
+                    total_pages: totalPages,
+                    has_next: page < totalPages,
+                    has_prev: page > 1
                 }
             };
             res.json(response);
@@ -511,9 +512,11 @@ export class AdminPaymentsController {
      */
     getCoupons = async (req, res) => {
         try {
+            const { page = 1, limit = 20, sort = 'created_at', order = 'desc', status, type, search } = req.query;
             if (!this.checkDatabaseConnection()) {
                 // Import realistic data dynamically
-                const { realisticCoupons } = await import('../data/realistic-data.js');
+                const realisticData = await import('../data/realistic-data.js');
+                const realisticCoupons = realisticData.realisticCoupons || [];
                 // Apply filters to mock data
                 let filteredCoupons = [...realisticCoupons];
                 if (status === 'active') {
@@ -563,14 +566,13 @@ export class AdminPaymentsController {
                         page: Number(page),
                         limit: Number(limit),
                         total,
-                        totalPages,
-                        hasNext: page < totalPages,
-                        hasPrev: page > 1
+                        total_pages: totalPages,
+                        has_next: page < totalPages,
+                        has_prev: page > 1
                     },
                     message: "Using realistic mock data - database not connected"
                 });
             }
-            const { page = 1, limit = 20, sort = 'created_at', order = 'desc', status, type, search } = req.query;
             // Build WHERE clause
             const conditions = [];
             const params = [];
@@ -647,9 +649,9 @@ export class AdminPaymentsController {
                     page,
                     limit,
                     total,
-                    totalPages,
-                    hasNext: page < totalPages,
-                    hasPrev: page > 1
+                    total_pages: totalPages,
+                    has_next: page < totalPages,
+                    has_prev: page > 1
                 }
             };
             res.json(response);

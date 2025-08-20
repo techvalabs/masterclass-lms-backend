@@ -1,4 +1,4 @@
-import { Database } from '@/config/database.js';
+import Database from '@/config/database.js';
 import { logger } from '@/utils/logger.js';
 
 /**

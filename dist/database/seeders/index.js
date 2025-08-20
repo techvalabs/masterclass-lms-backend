@@ -1,10 +1,10 @@
-import { Database } from '@/config/database.js';
+import Database from '@/config/database.js';
 import { logger } from '@/utils/logger.js';
 import { seedCategories } from './categories.js';
 import { seedUsers } from './users.js';
 import { seedInstructors } from './instructors.js';
-import { seedCourses } from './courses.js';
-import { seedModulesAndLessons } from './modules.js';
+// import { seedCourses } from './courses.js';
+// import { seedModulesAndLessons } from './modules.js';
 import { seedSystemSettings } from './settings.js';
 /**
  * Database Seeder
@@ -20,7 +20,8 @@ export class DatabaseSeeder {
             logger.info('Starting database seeding...');
             // Check if data already exists
             if (!force && skipExisting) {
-                const { rows } = await Database.query('SELECT COUNT(*) as count FROM users');
+                const result = await Database.query('SELECT COUNT(*) as count FROM users');
+                const rows = result[0];
                 if (rows[0].count > 0) {
                     logger.info('Database already contains data. Use --force to reseed.');
                     return;
@@ -31,8 +32,8 @@ export class DatabaseSeeder {
             await this.runSeederWithTransaction('Categories', seedCategories);
             await this.runSeederWithTransaction('Users', seedUsers);
             await this.runSeederWithTransaction('Instructors', seedInstructors);
-            await this.runSeederWithTransaction('Courses', seedCourses);
-            await this.runSeederWithTransaction('Modules and Lessons', seedModulesAndLessons);
+            // await this.runSeederWithTransaction('Courses', seedCourses);
+            // await this.runSeederWithTransaction('Modules and Lessons', seedModulesAndLessons);
             logger.info('Database seeding completed successfully!');
         }
         catch (error) {
@@ -46,9 +47,7 @@ export class DatabaseSeeder {
     static async runSeederWithTransaction(name, seeder) {
         try {
             logger.info(`Seeding ${name}...`);
-            await Database.transaction(async (connection) => {
-                await seeder();
-            });
+            await seeder();
             logger.info(`✓ ${name} seeded successfully`);
         }
         catch (error) {
@@ -124,12 +123,13 @@ export class DatabaseSeeder {
      */
     static async isSeeded() {
         try {
-            const { rows } = await Database.query(`
+            const result = await Database.query(`
         SELECT 
           (SELECT COUNT(*) FROM users) as user_count,
           (SELECT COUNT(*) FROM courses) as course_count,
           (SELECT COUNT(*) FROM categories) as category_count
       `);
+            const rows = result[0];
             const counts = rows[0];
             return counts.user_count > 0 && counts.course_count > 0 && counts.category_count > 0;
         }
@@ -143,7 +143,7 @@ export class DatabaseSeeder {
      */
     static async getStats() {
         try {
-            const { rows } = await Database.query(`
+            const result = await Database.query(`
         SELECT 
           (SELECT COUNT(*) FROM users) as users,
           (SELECT COUNT(*) FROM instructors) as instructors,
@@ -153,6 +153,7 @@ export class DatabaseSeeder {
           (SELECT COUNT(*) FROM categories) as categories,
           (SELECT COUNT(*) FROM enrollments) as enrollments
       `);
+            const rows = result[0];
             return rows[0];
         }
         catch (error) {

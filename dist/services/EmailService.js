@@ -20,7 +20,7 @@ export class EmailService {
     static async initialize() {
         try {
             // Create transporter
-            this.transporter = nodemailer.createTransporter({
+            this.transporter = nodemailer.createTransport({
                 host: config.email.host,
                 port: config.email.port,
                 secure: config.email.secure,
@@ -91,7 +91,8 @@ export class EmailService {
             return true;
         }
         catch (error) {
-            logger.email('Email send failed', Array.isArray(options.to) ? options.to.join(', ') : options.to, options.subject, error);
+            logger.email('Email send failed', Array.isArray(options.to) ? options.to.join(', ') : options.to, options.subject);
+            logger.error('Email error details:', error);
             return false;
         }
     }

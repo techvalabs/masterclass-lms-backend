@@ -121,7 +121,7 @@ export const CommonValidation = {
     }), Joi.object(), Joi.array()).optional()
 };
 // Add search validation after CommonValidation is defined
-CommonValidation.search = Joi.object({
+const searchValidation = Joi.object({
     q: Joi.string().trim().min(1).max(255).required(),
     category: Joi.string().optional(),
     level: Joi.string().valid('Beginner', 'Intermediate', 'Advanced').optional(),
@@ -483,7 +483,7 @@ export const courseSchemas = {
         maxPrice: Joi.number().min(0).optional(),
         rating: Joi.number().min(0).max(5).optional()
     }).concat(CommonValidation.pagination),
-    search: CommonValidation.search,
+    search: searchValidation,
     create: CourseValidation.createCourse.body,
     update: CourseValidation.updateCourse.body
 };

@@ -52,14 +52,11 @@ router.get('/detailed', async (req, res) => {
   try {
     await db.query('SELECT 1 as test');
     healthStatus.services.database = {
-      status: 'healthy',
-      connected: true,
+      status: 'healthy'
     };
   } catch (error) {
     healthStatus.services.database = {
-      status: 'unhealthy',
-      connected: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      status: 'unhealthy'
     };
     healthStatus.success = false;
     healthStatus.status = 'degraded';
@@ -130,9 +127,9 @@ router.get('/metrics', async (req, res) => {
     // Add database metrics if available
     try {
       await db.query('SELECT 1 as test');
-      metrics.database = { connected: true };
+      (metrics as any).database = { connected: true };
     } catch (error) {
-      metrics.database = { connected: false };
+      (metrics as any).database = { connected: false };
     }
 
     res.json({

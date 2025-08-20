@@ -126,9 +126,9 @@ export default class AdminLessonsController {
                 title,
                 description || null,
                 video_url || null,
-                video_duration || duration_minutes || 0,
-                content_type || 'video',
-                is_preview || is_free_preview || 0,
+                video_duration || 0,
+                'video',
+                is_preview || 0,
                 finalSortOrder
             ]);
             const lessonId = result.insertId;

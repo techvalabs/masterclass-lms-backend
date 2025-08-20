@@ -33,6 +33,14 @@ interface RefundRequest {
   description?: string;
 }
 
+interface RefundFilters extends PaginationQuery {
+  status?: 'pending' | 'processing' | 'approved' | 'rejected';
+  reason?: 'customer_request' | 'fraud' | 'duplicate' | 'other';
+  dateFrom?: string;
+  dateTo?: string;
+  search?: string;
+}
+
 interface CouponRequest {
   code: string;
   name: string;
@@ -69,6 +77,20 @@ export class AdminPaymentsController {
    */
   getTransactions = async (req: AdminPaymentsRequest, res: Response) => {
     try {
+      const {
+        page = 1,
+        limit = 20,
+        sort = 'created_at',
+        order = 'desc',
+        status,
+        paymentMethod,
+        dateFrom,
+        dateTo,
+        amountMin,
+        amountMax,
+        search
+      } = req.query as TransactionFilters;
+      
       if (!this.checkDatabaseConnection()) {
         // Import realistic data dynamically
         const { realisticTransactions } = await import('../data/realistic-data.js');
@@ -87,8 +109,8 @@ export class AdminPaymentsController {
         if (search) {
           const searchLower = search.toLowerCase();
           filteredTransactions = filteredTransactions.filter(t => 
-            t.user.name.toLowerCase().includes(searchLower) ||
-            t.user.email.toLowerCase().includes(searchLower) ||
+            t.user?.name?.toLowerCase().includes(searchLower) ||
+            t.user?.email?.toLowerCase().includes(searchLower) ||
             t.transactionId.toLowerCase().includes(searchLower) ||
             t.orderId.toLowerCase().includes(searchLower)
           );
@@ -143,27 +165,13 @@ export class AdminPaymentsController {
             page: Number(page), 
             limit: Number(limit), 
             total, 
-            totalPages, 
-            hasNext: page < totalPages, 
-            hasPrev: page > 1 
+            total_pages: totalPages, 
+            has_next: page < totalPages, 
+            has_prev: page > 1 
           },
           message: "Using realistic mock data - database not connected"
         });
       }
-
-      const {
-        page = 1,
-        limit = 20,
-        sort = 'created_at',
-        order = 'desc',
-        status,
-        paymentMethod,
-        dateFrom,
-        dateTo,
-        amountMin,
-        amountMax,
-        search
-      } = req.query as TransactionFilters;
 
       // Build WHERE clause
       const conditions: string[] = [];
@@ -219,7 +227,7 @@ export class AdminPaymentsController {
         ${whereClause}
       `;
 
-      const [countResult]: any = await this.db.execute(countQuery, params);
+      const [countResult]: any = await this.db!.execute(countQuery, params);
       const total = countResult[0].total;
 
       // Calculate pagination
@@ -261,7 +269,7 @@ export class AdminPaymentsController {
         LIMIT ? OFFSET ?
       `;
 
-      const [transactions]: any = await this.db.execute(transactionsQuery, [...params, limit, offset]);
+      const [transactions]: any = await this.db!.execute(transactionsQuery, [...params, limit, offset]);
 
       const response: ApiResponse = {
         success: true,
@@ -301,9 +309,9 @@ export class AdminPaymentsController {
           page,
           limit,
           total,
-          totalPages,
-          hasNext: page < totalPages,
-          hasPrev: page > 1
+          total_pages: totalPages,
+          has_next: page < totalPages,
+          has_prev: page > 1
         }
       };
 
@@ -324,9 +332,22 @@ export class AdminPaymentsController {
    */
   getRefunds = async (req: AdminPaymentsRequest, res: Response) => {
     try {
+      const {
+        page = 1,
+        limit = 20,
+        sort = 'created_at',
+        order = 'desc',
+        status,
+        reason,
+        dateFrom,
+        dateTo,
+        search
+      } = req.query as RefundFilters;
+      
       if (!this.checkDatabaseConnection()) {
         // Import realistic data dynamically
-        const { realisticRefunds } = await import('../data/realistic-data.js');
+        const data = await import('../data/realistic-data.js');
+        const realisticRefunds = (data as any).realisticRefunds || [];
         
         // Apply filters to mock data
         let filteredRefunds = [...realisticRefunds];
@@ -389,25 +410,13 @@ export class AdminPaymentsController {
             page: Number(page), 
             limit: Number(limit), 
             total, 
-            totalPages, 
-            hasNext: page < totalPages, 
-            hasPrev: page > 1 
+            total_pages: totalPages, 
+            has_next: page < totalPages, 
+            has_prev: page > 1 
           },
           message: "Using realistic mock data - database not connected"
         });
       }
-
-      const {
-        page = 1,
-        limit = 20,
-        sort = 'created_at',
-        order = 'desc',
-        status,
-        reason,
-        dateFrom,
-        dateTo,
-        search
-      } = req.query as any;
 
       // Build WHERE clause
       const conditions: string[] = [];
@@ -448,7 +457,7 @@ export class AdminPaymentsController {
         ${whereClause}
       `;
 
-      const [countResult]: any = await this.db.execute(countQuery, params);
+      const [countResult]: any = await this.db!.execute(countQuery, params);
       const total = countResult[0].total;
 
       // Calculate pagination
@@ -486,7 +495,7 @@ export class AdminPaymentsController {
         LIMIT ? OFFSET ?
       `;
 
-      const [refunds]: any = await this.db.execute(refundsQuery, [...params, limit, offset]);
+      const [refunds]: any = await this.db!.execute(refundsQuery, [...params, limit, offset]);
 
       const response: ApiResponse = {
         success: true,
@@ -521,9 +530,9 @@ export class AdminPaymentsController {
           page,
           limit,
           total,
-          totalPages,
-          hasNext: page < totalPages,
-          hasPrev: page > 1
+          total_pages: totalPages,
+          has_next: page < totalPages,
+          has_prev: page > 1
         }
       };
 
@@ -551,7 +560,7 @@ export class AdminPaymentsController {
       }
 
       // Get the original transaction
-      const [transactions]: any = await this.db.execute(
+      const [transactions]: any = await this.db!.execute(
         'SELECT * FROM payment_transactions WHERE id = ? AND status = ?',
         [transactionId, 'completed']
       );
@@ -563,7 +572,7 @@ export class AdminPaymentsController {
       const transaction = transactions[0];
 
       // Check if refund amount is valid
-      const [existingRefunds]: any = await this.db.execute(
+      const [existingRefunds]: any = await this.db!.execute(
         'SELECT COALESCE(SUM(amount), 0) as total_refunded FROM refunds WHERE transaction_id = ? AND status = ?',
         [transactionId, 'completed']
       );
@@ -579,11 +588,11 @@ export class AdminPaymentsController {
       const refundTransactionId = `ref_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
       // Start transaction
-      await this.db.execute('START TRANSACTION');
+      await this.db!.execute('START TRANSACTION');
 
       try {
         // Insert refund record
-        const [refundResult]: any = await this.db.execute(
+        const [refundResult]: any = await this.db!.execute(
           `INSERT INTO refunds (
             transaction_id, user_id, refund_transaction_id, amount, reason, description,
             status, processed_by, processed_at, created_at, updated_at
@@ -605,12 +614,12 @@ export class AdminPaymentsController {
         // Update transaction status if fully refunded
         const newTotalRefunded = totalRefunded + amount;
         if (newTotalRefunded >= parseFloat(transaction.amount)) {
-          await this.db.execute(
+          await this.db!.execute(
             'UPDATE payment_transactions SET status = ?, updated_at = NOW() WHERE id = ?',
             ['refunded', transactionId]
           );
         } else {
-          await this.db.execute(
+          await this.db!.execute(
             'UPDATE payment_transactions SET status = ?, updated_at = NOW() WHERE id = ?',
             ['partially_refunded', transactionId]
           );
@@ -618,14 +627,14 @@ export class AdminPaymentsController {
 
         // Update enrollment if course-related
         if (transaction.course_id) {
-          await this.db.execute(
+          await this.db!.execute(
             'UPDATE enrollments SET payment_status = ?, updated_at = NOW() WHERE user_id = ? AND course_id = ?',
             [newTotalRefunded >= parseFloat(transaction.amount) ? 'refunded' : 'partially_refunded', transaction.user_id, transaction.course_id]
           );
         }
 
         // Log activity
-        await this.db.execute(
+        await this.db!.execute(
           'INSERT INTO activity_logs (user_id, action, entity_type, entity_id, description, metadata, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())',
           [
             req.user.id,
@@ -643,7 +652,7 @@ export class AdminPaymentsController {
           ]
         );
 
-        await this.db.execute('COMMIT');
+        await this.db!.execute('COMMIT');
 
         res.json({
           success: true,
@@ -656,7 +665,7 @@ export class AdminPaymentsController {
           }
         });
       } catch (error) {
-        await this.db.execute('ROLLBACK');
+        await this.db!.execute('ROLLBACK');
         throw error;
       }
     } catch (error) {
@@ -682,9 +691,20 @@ export class AdminPaymentsController {
    */
   getCoupons = async (req: AdminPaymentsRequest, res: Response) => {
     try {
+      const {
+        page = 1,
+        limit = 20,
+        sort = 'created_at',
+        order = 'desc',
+        status,
+        type,
+        search
+      } = req.query as any;
+
       if (!this.checkDatabaseConnection()) {
         // Import realistic data dynamically
-        const { realisticCoupons } = await import('../data/realistic-data.js');
+        const realisticData = await import('../data/realistic-data.js');
+        const realisticCoupons = (realisticData as any).realisticCoupons || [];
         
         // Apply filters to mock data
         let filteredCoupons = [...realisticCoupons];
@@ -748,23 +768,13 @@ export class AdminPaymentsController {
             page: Number(page), 
             limit: Number(limit), 
             total, 
-            totalPages, 
-            hasNext: page < totalPages, 
-            hasPrev: page > 1 
+            total_pages: totalPages, 
+            has_next: page < totalPages, 
+            has_prev: page > 1 
           },
           message: "Using realistic mock data - database not connected"
         });
       }
-
-      const {
-        page = 1,
-        limit = 20,
-        sort = 'created_at',
-        order = 'desc',
-        status,
-        type,
-        search
-      } = req.query as any;
 
       // Build WHERE clause
       const conditions: string[] = [];
@@ -795,7 +805,7 @@ export class AdminPaymentsController {
         ${whereClause}
       `;
 
-      const [countResult]: any = await this.db.execute(countQuery, params);
+      const [countResult]: any = await this.db!.execute(countQuery, params);
       const total = countResult[0].total;
 
       // Calculate pagination
@@ -815,7 +825,7 @@ export class AdminPaymentsController {
         LIMIT ? OFFSET ?
       `;
 
-      const [coupons]: any = await this.db.execute(couponsQuery, [...params, limit, offset]);
+      const [coupons]: any = await this.db!.execute(couponsQuery, [...params, limit, offset]);
 
       const response: ApiResponse = {
         success: true,
@@ -851,9 +861,9 @@ export class AdminPaymentsController {
           page,
           limit,
           total,
-          totalPages,
-          hasNext: page < totalPages,
-          hasPrev: page > 1
+          total_pages: totalPages,
+          has_next: page < totalPages,
+          has_prev: page > 1
         }
       };
 
@@ -911,7 +921,7 @@ export class AdminPaymentsController {
       }
 
       // Check if code already exists
-      const [existingCoupons]: any = await this.db.execute(
+      const [existingCoupons]: any = await this.db!.execute(
         'SELECT id FROM coupons WHERE code = ?',
         [code.toUpperCase()]
       );
@@ -935,7 +945,7 @@ export class AdminPaymentsController {
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
       `;
 
-      const [result]: any = await this.db.execute(insertQuery, [
+      const [result]: any = await this.db!.execute(insertQuery, [
         code.toUpperCase(),
         name,
         description,
@@ -958,7 +968,7 @@ export class AdminPaymentsController {
       const couponId = result.insertId;
 
       // Log activity
-      await this.db.execute(
+      await this.db!.execute(
         'INSERT INTO activity_logs (user_id, action, entity_type, entity_id, description, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
         [req.user.id, 'coupon_created', 'coupon', couponId, `Created coupon: ${code}`]
       );
@@ -1005,7 +1015,7 @@ export class AdminPaymentsController {
       }
 
       // Check if coupon exists
-      const [existingCoupon]: any = await this.db.execute(
+      const [existingCoupon]: any = await this.db!.execute(
         'SELECT id, code, used_count FROM coupons WHERE id = ?',
         [couponId]
       );
@@ -1126,10 +1136,10 @@ export class AdminPaymentsController {
         WHERE id = ?
       `;
 
-      await this.db.execute(updateQuery, [...updateParams, couponId]);
+      await this.db!.execute(updateQuery, [...updateParams, couponId]);
 
       // Log activity
-      await this.db.execute(
+      await this.db!.execute(
         'INSERT INTO activity_logs (user_id, action, entity_type, entity_id, description, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
         [req.user.id, 'coupon_updated', 'coupon', couponId, `Updated coupon: ${coupon.code}`]
       );
@@ -1171,7 +1181,7 @@ export class AdminPaymentsController {
       }
 
       // Check if coupon exists
-      const [existingCoupon]: any = await this.db.execute(
+      const [existingCoupon]: any = await this.db!.execute(
         'SELECT id, code, used_count FROM coupons WHERE id = ?',
         [couponId]
       );
@@ -1188,10 +1198,10 @@ export class AdminPaymentsController {
       }
 
       // Delete coupon
-      await this.db.execute('DELETE FROM coupons WHERE id = ?', [couponId]);
+      await this.db!.execute('DELETE FROM coupons WHERE id = ?', [couponId]);
 
       // Log activity
-      await this.db.execute(
+      await this.db!.execute(
         'INSERT INTO activity_logs (user_id, action, entity_type, entity_id, description, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
         [req.user.id, 'coupon_deleted', 'coupon', couponId, `Deleted coupon: ${coupon.code}`]
       );

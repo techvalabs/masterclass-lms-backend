@@ -1,11 +1,2 @@
-export default {
-    User,
-    Course,
-    Module,
-    Lesson,
-    Enrollment,
-    AuthUser,
-    AuthRequest,
-    ApiResponse
-};
+export {};
 //# sourceMappingURL=index.js.map

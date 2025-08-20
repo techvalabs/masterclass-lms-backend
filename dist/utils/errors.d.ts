@@ -7,6 +7,7 @@ export declare class AppError extends Error {
     isOperational: boolean;
     code?: string;
     field?: string;
+    details?: any;
     constructor(message: string, statusCode?: number, code?: string, field?: string);
 }
 export declare class ValidationError extends AppError {

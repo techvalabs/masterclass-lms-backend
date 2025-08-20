@@ -404,12 +404,15 @@ export interface FileUpload {
 
 // Authentication Types
 export interface AuthUser extends JwtPayload {
-  id: string;
+  id: number;
   email: string;
   name: string;
-  role: 'student' | 'instructor' | 'admin';
+  role: string;
   avatar?: string;
-  is_active: boolean;
+  isActive: boolean;
+  roleId: number;
+  permissions: string[];
+  isVerified: boolean;
 }
 
 export interface AuthRequest extends Request {
@@ -658,13 +661,3 @@ export interface AppConfig {
   };
 }
 
-export default {
-  User,
-  Course,
-  Module,
-  Lesson,
-  Enrollment,
-  AuthUser,
-  AuthRequest,
-  ApiResponse
-};
